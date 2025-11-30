@@ -1,3 +1,4 @@
+import { ChangePasswordComponent } from './auth/change-password/change-password.component';
 import { Routes } from '@angular/router';
 import { HomeComponent } from './dashboard/home/home.component';
 
@@ -7,6 +8,11 @@ export const routes: Routes = [
   {
     path: 'auth',
     loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule),
+  },
+
+  {
+    path: 'change-password',
+    loadComponent: () => import('./auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
   },
 
   {
