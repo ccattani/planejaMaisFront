@@ -1,0 +1,24 @@
+<div class="profile-card">
+  <h1>Meu Perfil</h1>
+
+  <form (ngSubmit)="updateProfile()">
+    <input type="text" placeholder="Usuário" [(ngModel)]="userData.user" name="user" />
+
+    <input type="text" placeholder="Nome" [(ngModel)]="userData.name" name="name" />
+
+    <input type="email" placeholder="Email" [(ngModel)]="userData.email" name="email" />
+
+    <a routerLink="/auth/change-password">
+      Alterar senha
+    </a>
+
+    <button class="btn-primary" type="submit">Salvar alterações</button>
+  </form>
+
+  <button class="btn-danger" (click)="deleteAccount()">
+    Excluir minha conta
+  </button>
+
+  <p class="success" *ngIf="successMsg">{{ successMsg }}</p>
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
+</div>

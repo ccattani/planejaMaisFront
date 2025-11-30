@@ -1,0 +1,69 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+  background: #0f1620;
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #fff;
+}
+
+
+.logo {
+  font-size: 32px;
+  font-weight: bold;
+}
+.logo span {
+  color: #00dd8f;
+}
+
+h2 {
+  margin: 12px 0 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+p {
+  font-size: 14px;
+  opacity: 0.8;
+  margin-bottom: 20px;
+}
+
+input {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  background: #1c2632;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #00dd8f, #007bff);
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.link {
+  color: #4fa3ff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+
+
+  input{
+    width: auto;
+  }
+}

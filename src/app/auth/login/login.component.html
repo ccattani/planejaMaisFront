@@ -1,0 +1,35 @@
+<app-auth-card>
+  <h1 class="logo">Planeja<span>+</span></h1>
+
+  <form (ngSubmit)="submit()">
+    <input
+      type="text"
+      placeholder="Usuário"
+      [(ngModel)]="form.user"
+      name="user"
+      required
+    />
+
+    <input
+      type="password"
+      placeholder="Senha"
+      [(ngModel)]="form.passwordHash"
+      name="password"
+      required
+    />
+
+    <div class="remember">
+      <input type="checkbox" [(ngModel)]="form.remember" name="remember" />
+      <label>Lembrar de mim</label>
+    </div>
+
+    <button class="btn-primary" type="submit" [disabled]="loading">
+      {{ loading ? 'Entrando...' : 'Entrar' }}
+    </button>
+  </form>
+
+  <div class="flex justify-content-between align-items-center">
+    <a routerLink="/auth/register" class="link">Criar uma conta</a>
+    <a routerLink="/auth/forgot-password" class="link">Esqueceu a senha?</a>
+  </div>
+</app-auth-card>

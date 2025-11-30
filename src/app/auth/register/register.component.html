@@ -1,0 +1,40 @@
+<app-auth-card>
+  <h1 class="logo">Planeja<span>+</span></h1>
+  <h2>Criar conta</h2>
+
+  <form (ngSubmit)="submit()">
+    <input placeholder="Nome" [(ngModel)]="form.name" name="name" required />
+
+    <input placeholder="Usuário" [(ngModel)]="form.user" name="user" required />
+
+    <input
+      type="password"
+      placeholder="Senha"
+      [(ngModel)]="form.password"
+      name="password"
+      required
+    />
+
+    <input
+      type="email"
+      placeholder="E-mail"
+      [(ngModel)]="form.email"
+      name="email"
+      required
+    />
+
+    <input
+      type="date"
+      placeholder="Data de nascimento"
+      [(ngModel)]="form.birthday"
+      name="birthday"
+      required
+    />
+
+    <button class="btn-primary" [disabled]="loading">
+      {{ loading ? 'Criando...' : 'Criar conta' }}
+    </button>
+
+    <a routerLink="/auth/login" class="link">Voltar para o login</a>
+  </form>
+</app-auth-card>
