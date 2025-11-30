@@ -11,7 +11,7 @@ export const routes: Routes = [
   },
 
   {
-    path: 'change-password',
+    path: 'auth/change-password/:token',
     loadComponent: () => import('./auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
   },
 
