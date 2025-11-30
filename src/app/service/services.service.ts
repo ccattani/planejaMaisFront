@@ -40,7 +40,7 @@ export class ServicesService {
       this.http.post(`${this.api}/login/newPassword`, payload,
         {
         headers: {
-          Authorization: `Bearer ${token}`
+          authorization: `Bearer ${token}`
         }
       }
       )
