@@ -35,9 +35,15 @@ export class ServicesService {
     );
   }
 
-  newPassword(payload: { user: string; passwordHash: string }) {
+  newPassword(payload: { passwordHash: string }, token: string) {
     return firstValueFrom(
-      this.http.post(`${this.api}/login/newPassword`, payload)
+      this.http.post(`${this.api}/login/newPassword`, payload,
+        {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+      )
     );
   }
 

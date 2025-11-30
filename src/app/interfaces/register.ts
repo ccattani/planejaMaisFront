@@ -7,5 +7,5 @@ export interface RegisterPayload {
   passwordHash: string;
   createdAt: string;
   updatedAt: string;
-  isActive: boolean;
+  isActive?: boolean;
 }

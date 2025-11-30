@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { ServicesService } from "../../service/services.service";
 import { AuthCardComponent } from "../components/auth-card/auth-card.component";
-import { RouterModule } from "@angular/router";
+import { RouterModule, ActivatedRoute } from "@angular/router";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 
@@ -13,29 +13,37 @@ import { CommonModule } from "@angular/common";
   styleUrls: ["./change-password.component.scss"],
 })
 export class ChangePasswordComponent implements OnInit {
-  user = "";
+
   newPassword = "";
   confirmPassword = "";
+
+  resetToken = "";    // ← AQUI está o que faltava
 
   loading = false;
   successMsg = "";
   errorMsg = "";
 
-  constructor(private service: ServicesService) {}
+  constructor(
+    private service: ServicesService,
+    private route: ActivatedRoute
+  ) {}
 
-  ngOnInit() {}
+  ngOnInit() {
+    // pega o token da URL
+    this.resetToken = this.route.snapshot.paramMap.get('token') || "";
+
+    if (!this.resetToken) {
+      this.errorMsg = "Token inválido.";
+    }
+  }
 
   async submit() {
+
     this.successMsg = "";
     this.errorMsg = "";
     this.loading = true;
 
-    // validações de praxe
-    if (
-      !this.user.trim() ||
-      !this.newPassword.trim() ||
-      !this.confirmPassword.trim()
-    ) {
+    if (!this.newPassword.trim() || !this.confirmPassword.trim()) {
       this.errorMsg = "Preencha todos os campos.";
       this.loading = false;
       return;
@@ -49,15 +57,13 @@ export class ChangePasswordComponent implements OnInit {
 
     try {
       const payload = {
-        user: this.user,
-        passwordHash: this.newPassword,
+        passwordHash: this.newPassword
       };
 
-      await this.service.newPassword(payload);
+      await this.service.newPassword(payload, this.resetToken);
 
       this.successMsg = "Senha atualizada com sucesso.";
     } catch (error) {
-      console.error("[ResetPassword] Erro:", error);
       this.errorMsg = "Erro ao atualizar a senha.";
     } finally {
       this.loading = false;
