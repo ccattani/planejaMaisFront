@@ -29,27 +29,43 @@ export class LoginComponent {
     private router: Router
   ) {}
 
-  async submit() {
-    this.loading = true;
-    this.error = '';
+async submit() {
+  this.loading = true;
+  this.error = '';
 
-    try {
-      let token = await this.service.login(this.form);
-      // remove aspas extras vindas do backend
-      token = token.replace(/"/g, "");
+  try {
+    let token = await this.service.login(this.form);
 
-      if (this.form.remember) {
-        localStorage.setItem('token', token);
-      } else {
-        sessionStorage.setItem('token', token);
+    token = token.replace(/"/g, "");
+
+    if (this.form.remember) {
+      localStorage.setItem('token', token);
+    } else {
+      sessionStorage.setItem('token', token);
+    }
+
+    this.router.navigate(['/profile']);
+
+  } catch (err: any) {
+
+    // ---- CHECK DO isActive ----
+    if (err.error === 'Conta não verificada') {
+
+      try {
+        await this.service.sendAuthEmail();
+        this.error = 'Sua conta ainda não foi ativada. Enviamos um e-mail para você confirmar.';
+      } catch {
+        this.error = 'Falha ao enviar o e-mail de ativação.';
       }
 
-      this.router.navigate(['/profile']);
-    } catch (err: any) {
-      this.error = err.error || 'Usuário ou senha inválidos';
-    } finally {
-      this.loading = false;
+      return;
     }
+
+    this.error = 'Usuário ou senha inválidos';
+  } finally {
+    this.loading = false;
   }
+}
+
 
 }

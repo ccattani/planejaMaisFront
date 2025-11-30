@@ -49,9 +49,9 @@ export class ServicesService {
     return firstValueFrom(this.http.delete(`${this.api}/login/delete`));
   }
 
-  autenticateAccountEmail(email: string) {
+  sendAuthEmail() {
     return firstValueFrom(
-      this.http.get(`${this.api}/login/autenticateAccountEmail/${email}`)
+      this.http.get(`${this.api}/login/autenticateAccountEmail`)
     );
   }
 }

@@ -22,15 +22,15 @@ export class RegisterComponent {
   };
 
   loading = false;
-  error = '';
-  success = '';
+  errorMsg = '';
+  successMsg = '';
 
   constructor(private service: ServicesService) {}
 
   async submit() {
     this.loading = true;
-    this.error = '';
-    this.success = '';
+    this.errorMsg = '';
+    this.successMsg = '';
     const now = new Date().toISOString();
 
     const payload: RegisterPayload = {
@@ -42,14 +42,15 @@ export class RegisterComponent {
       passwordHash: this.form.password,
       createdAt: now,
       updatedAt: now,
-      isActive: true
+      isActive: false
     };
 
     try {
       await this.service.createAccount(payload);
-      this.success = 'Conta criada com sucesso!';
+      await this.service.sendAuthEmail();
+      this.successMsg = 'Conta criada com sucesso! Enviamos um e-mail de ativação.';
     } catch (err: any) {
-      this.error = err.error?.message || 'Erro ao criar conta';
+      this.errorMsg = err.error?.message || 'Erro ao criar conta';
     } finally {
       this.loading = false;
     }

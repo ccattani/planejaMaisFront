@@ -1,14 +1,44 @@
 import { Component } from '@angular/core';
-import { AuthCardComponent } from "../components/auth-card/auth-card.component";
-import { RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { ServicesService } from '../../service/services.service';
+import { AuthCardComponent } from '../components/auth-card/auth-card.component';
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-confirm-accoun',
+  selector: 'app-confirm-account',
   standalone: true,
-  imports: [AuthCardComponent, RouterModule],
   templateUrl: './confirm-account.component.html',
+  imports: [AuthCardComponent, RouterModule, FormsModule, CommonModule],
   styleUrl: './confirm-account.component.scss'
 })
 export class ConfirmAccountComponent {
 
+  user = '';
+  msg = '';
+  loading = false;
+
+  constructor(
+    private route: ActivatedRoute,
+    private service: ServicesService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.user = this.route.snapshot.paramMap.get('user') || '';
+  }
+
+  async confirm() {
+  try {
+    let token = await this.service.sendAuthEmail();
+  console.log(token);
+    // token = token.replace(/"/g, "");
+    // redireciona para login com token
+    this.router.navigate(['/auth/login'], { queryParams: { activation: token } });
+
+  } catch {
+    // feedback rápido e honesto
+    alert('Erro ao confirmar sua conta. Tente novamente.');
+  }
+}
 }

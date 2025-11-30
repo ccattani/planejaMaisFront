@@ -1,14 +1,13 @@
 /* You can add global styles to this file, and also import other style files */
 body {
   background: #0f1620;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   color: #fff;
 }
-
 
 .logo {
   font-size: 32px;
@@ -62,8 +61,19 @@ form {
   display: flex;
   flex-direction: column;
 
-
-  input{
+  input {
     width: auto;
   }
+}
+
+.success {
+  text-align: center;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.error {
+  text-align: center;
+  color: #f87171;
+  font-weight: 600;
 }

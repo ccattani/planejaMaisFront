@@ -37,4 +37,7 @@
 
     <a routerLink="/auth/login" class="link">Voltar para o login</a>
   </form>
+
+    <p class="success" *ngIf="successMsg">{{ successMsg }}</p>
+  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
 </app-auth-card>

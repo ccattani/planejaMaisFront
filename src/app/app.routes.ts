@@ -1,6 +1,5 @@
-import { ChangePasswordComponent } from './auth/change-password/change-password.component';
 import { Routes } from '@angular/router';
-import { HomeComponent } from './dashboard/home/home.component';
+
 
 export const routes: Routes = [
   { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
@@ -13,6 +12,11 @@ export const routes: Routes = [
   {
     path: 'auth/change-password/:token',
     loadComponent: () => import('./auth/change-password/change-password.component').then(m => m.ChangePasswordComponent),
+  },
+
+    {
+    path: 'auth/confirm-account/:token',
+    loadComponent: () => import('./auth/confirm-account/confirm-account.component').then(m => m.ConfirmAccountComponent),
   },
 
   {
