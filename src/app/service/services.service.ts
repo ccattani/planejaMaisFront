@@ -37,11 +37,13 @@ export class ServicesService {
 
   newPassword(payload: { passwordHash: string }, token: string) {
     return firstValueFrom(
-      this.http.post(`${this.api}/login/newPassword`, payload, {
+      this.http.post(`${this.api}/login/newPassword`, payload,
+        {
         headers: {
-          authorization: `Bearer ${token}`,
-        },
-      })
+          authorization: `Bearer ${token}`
+        }
+      }
+      )
     );
   }
 
@@ -53,11 +55,9 @@ export class ServicesService {
     return firstValueFrom(this.http.delete(`${this.api}/login/delete`));
   }
 
-  confirmAccount(token: string) {
+  sendAuthEmail() {
     return firstValueFrom(
-      this.http.get(`${this.api}/login/autenticateAccountEmail`, {
-        headers: { authorization: `Bearer ${token}` },
-      })
+      this.http.get(`${this.api}/login/autenticateAccountEmail`)
     );
   }
 }

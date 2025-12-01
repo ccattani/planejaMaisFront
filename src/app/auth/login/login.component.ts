@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AuthCardComponent } from '../components/auth-card/auth-card.component';
+import { AuthCardComponent } from "../components/auth-card/auth-card.component";
 import { ServicesService } from '../../service/services.service';
 import { LoginPayload } from '../../interfaces/login';
 
@@ -29,58 +29,43 @@ export class LoginComponent {
     private router: Router
   ) {}
 
-  private isAccountInactive(error: string): boolean {
-    return [
-      'active',
-      'ativ',
-      'verific',
-      'not active',
-      'ACCOUNT_NOT_ACTIVE'
-    ].some(flag => error.toLowerCase().includes(flag));
-  }
+async submit() {
+  this.loading = true;
+  this.error = '';
 
-  async submit() {
-    this.loading = true;
-    this.error = '';
+  try {
+    let token = await this.service.login(this.form);
 
-    try {
-      // --- LOGIN ---
-      let token = await this.service.login(this.form);
-      token = token.replace(/"/g, '');
+    token = token.replace(/"/g, "");
 
-      // --- ARMAZENAMENTO ---
-      const storage = this.form.remember ? localStorage : sessionStorage;
-      storage.setItem('token', token);
+    if (this.form.remember) {
+      localStorage.setItem('token', token);
+    } else {
+      sessionStorage.setItem('token', token);
+    }
 
-      // --- REDIRECT ---
-      this.router.navigate(['/profile']);
+    this.router.navigate(['/profile']);
 
-    } catch (err: any) {
+  } catch (err: any) {
 
-      const backendError =
-        err?.error?.error ||
-        err?.error ||
-        err?.message ||
-        '';
+    // ---- CHECK DO isActive ----
+    if (err.error === 'Conta não verificada') {
 
-      console.log('ERRO BACKEND:', backendError);
-
-      // --- CONTA NÃO ATIVA ---
-      if (this.isAccountInactive(backendError)) {
-        try {
-          await this.service.confirmAccount(this.form.user); // ← O CERTO
-          this.error = 'Sua conta ainda não está ativa. Reenviamos o e-mail de confirmação.';
-        } catch {
-          this.error = 'Falha ao enviar o e-mail de ativação.';
-        }
-        return;
+      try {
+        await this.service.sendAuthEmail();
+        this.error = 'Sua conta ainda não foi ativada. Enviamos um e-mail para você confirmar.';
+      } catch {
+        this.error = 'Falha ao enviar o e-mail de ativação.';
       }
 
-      // --- LOGIN INVÁLIDO ---
-      this.error = 'Usuário ou senha inválidos';
-
-    } finally {
-      this.loading = false;
+      return;
     }
+
+    this.error = 'Usuário ou senha inválidos';
+  } finally {
+    this.loading = false;
   }
+}
+
+
 }

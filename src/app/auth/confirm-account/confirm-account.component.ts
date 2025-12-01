@@ -14,7 +14,7 @@ import { CommonModule } from '@angular/common';
 })
 export class ConfirmAccountComponent {
 
-  token = '';
+  user = '';
   msg = '';
   loading = false;
 
@@ -25,28 +25,20 @@ export class ConfirmAccountComponent {
   ) {}
 
   ngOnInit() {
-    this.token = this.route.snapshot.paramMap.get('token') || '';
+    this.user = this.route.snapshot.paramMap.get('user') || '';
   }
 
   async confirm() {
-    this.loading = true;
+  try {
+    let token = await this.service.sendAuthEmail();
+  console.log(token);
+    // token = token.replace(/"/g, "");
+    // redireciona para login com token
+    this.router.navigate(['/auth/login'], { queryParams: { activation: token } });
 
-    try {
-      await this.service.confirmAccount(this.token);
-
-      this.msg = "Conta ativada com sucesso!";
-
-      // redirecionar ao login após 1s
-      setTimeout(() => {
-        this.router.navigate(['/auth/login'], {
-          queryParams: { activated: true }
-        });
-      }, 1000);
-
-    } catch(err) {
-      this.msg = "Erro ao ativar sua conta. Link inválido ou expirado.";
-    } finally {
-      this.loading = false;
-    }
+  } catch {
+    // feedback rápido e honesto
+    alert('Erro ao confirmar sua conta. Tente novamente.');
   }
+}
 }
