@@ -52,7 +52,7 @@ async submit() {
     if (err.error === 'Conta não verificada') {
 
       try {
-        await this.service.sendAuthEmail();
+        await this.service.sendAuthEmail(this.form.user);
         this.error = 'Sua conta ainda não foi ativada. Enviamos um e-mail para você confirmar.';
       } catch {
         this.error = 'Falha ao enviar o e-mail de ativação.';

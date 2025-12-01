@@ -55,9 +55,16 @@ export class ServicesService {
     return firstValueFrom(this.http.delete(`${this.api}/login/delete`));
   }
 
-  sendAuthEmail() {
+  sendAuthEmail(token: string) {
     return firstValueFrom(
-      this.http.get(`${this.api}/login/autenticateAccountEmail`)
+      this.http.get(`${this.api}/login/autenticateAccountEmail`,
+        {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        responseType: 'text'
+      }
+      )
     );
   }
 }

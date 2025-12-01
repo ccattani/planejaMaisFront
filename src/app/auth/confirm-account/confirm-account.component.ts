@@ -25,12 +25,12 @@ export class ConfirmAccountComponent {
   ) {}
 
   ngOnInit() {
-    this.user = this.route.snapshot.paramMap.get('user') || '';
+    this.user = this.route.snapshot.paramMap.get('token') || '';
   }
 
   async confirm() {
   try {
-    let token = await this.service.sendAuthEmail();
+    let token = await this.service.sendAuthEmail(this.user);
   console.log(token);
     // token = token.replace(/"/g, "");
     // redireciona para login com token
