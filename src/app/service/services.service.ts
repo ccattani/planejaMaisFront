@@ -56,7 +56,7 @@ export class ServicesService {
   confirmAccount(token: string) {
     return firstValueFrom(
       this.http.get(`${this.api}/login/autenticateAccountEmail`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { authorization: `Bearer ${token}` },
       })
     );
   }
