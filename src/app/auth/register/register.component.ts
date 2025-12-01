@@ -47,7 +47,7 @@ export class RegisterComponent {
 
     try {
       await this.service.createAccount(payload);
-      this.successMsg = 'Conta criada com sucesso! Enviamos um e-mail de ativação.';
+      this.successMsg = 'Conta criada com sucesso!';
     } catch (err: any) {
       this.errorMsg = err.error?.message || 'Erro ao criar conta';
     } finally {
