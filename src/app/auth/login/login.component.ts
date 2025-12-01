@@ -68,7 +68,7 @@ export class LoginComponent {
       // --- CONTA NÃO ATIVA ---
       if (this.isAccountInactive(backendError)) {
         try {
-          await this.service.sendAuthEmail();
+          await this.service.confirmAccount(this.form.user); // ← O CERTO
           this.error = 'Sua conta ainda não está ativa. Reenviamos o e-mail de confirmação.';
         } catch {
           this.error = 'Falha ao enviar o e-mail de ativação.';
