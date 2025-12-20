@@ -1,9 +1,9 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
-import { RegisterPayload } from "../interfaces/register";
-import { LoginPayload } from "../interfaces/login";
-import { UpdatePayload } from "../interfaces/update";
+import { RegisterPayload } from "../../shared/models/interfaces/register";
+import { LoginPayload } from "../../shared/models/interfaces/login";
+import { UpdatePayload } from "../../shared/models/interfaces/update";
 
 @Injectable({
   providedIn: "root",

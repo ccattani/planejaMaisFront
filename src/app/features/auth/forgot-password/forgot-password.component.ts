@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { AuthCardComponent } from "../components/auth-card/auth-card.component";
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { ServicesService } from '../../service/services.service';
+import { ServicesService } from '../../../core/service/services.service';
 import { CommonModule } from '@angular/common';
 
 @Component({

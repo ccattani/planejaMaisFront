@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { ServicesService } from '../../service/services.service';
+import { ServicesService } from '../../../core/service/services.service';
 import { AuthCardComponent } from '../components/auth-card/auth-card.component';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';

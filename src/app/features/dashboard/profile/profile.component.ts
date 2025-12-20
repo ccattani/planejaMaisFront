@@ -1,9 +1,10 @@
 import { Component, OnInit } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { ServicesService } from "../../service/services.service";
 import { Router, RouterModule } from "@angular/router";
-import { UpdatePayload } from "../../interfaces/update";
+import { ServicesService } from "../../../core/service/services.service";
+import { UpdatePayload } from "../../../shared/models/interfaces/update";
+
 
 @Component({
   selector: "app-profile",

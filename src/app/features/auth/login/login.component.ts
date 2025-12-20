@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthCardComponent } from "../components/auth-card/auth-card.component";
-import { ServicesService } from '../../service/services.service';
-import { LoginPayload } from '../../interfaces/login';
+import { ServicesService } from '../../../core/service/services.service';
+import { LoginPayload } from '../../../shared/models/interfaces/login';
 
 @Component({
   selector: 'app-login',

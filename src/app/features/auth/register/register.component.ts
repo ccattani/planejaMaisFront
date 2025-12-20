@@ -2,8 +2,8 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { RegisterPayload } from '../../interfaces/register';
-import { ServicesService } from '../../service/services.service';
+import { ServicesService } from '../../../core/service/services.service';
+import { RegisterPayload } from '../../../shared/models/interfaces/register';
 import { AuthCardComponent } from '../components/auth-card/auth-card.component';
 
 @Component({
