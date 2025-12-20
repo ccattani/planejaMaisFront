@@ -48,7 +48,6 @@ async submit() {
 
   } catch (err: any) {
 
-    // ---- CHECK DO isActive ----
     if (err.error === 'Conta não verificada') {
 
       try {

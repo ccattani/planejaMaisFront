@@ -27,7 +27,7 @@ export class ForgotPasswordComponent {
     this.errorMsg = '';
     this.loading = true;
 
-    // regra de ouro: e-mail vazio nem entra no pipeline
+    // regra: e-mail vazio nem entra no pipeline
     if (!this.email.trim()) {
       this.loading = false;
       this.errorMsg = 'Informe um e-mail válido.';

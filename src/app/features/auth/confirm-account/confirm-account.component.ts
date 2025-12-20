@@ -37,7 +37,6 @@ export class ConfirmAccountComponent {
     this.router.navigate(['/auth/login'], { queryParams: { activation: token } });
 
   } catch {
-    // feedback rápido e honesto
     alert('Erro ao confirmar sua conta. Tente novamente.');
   }
 }

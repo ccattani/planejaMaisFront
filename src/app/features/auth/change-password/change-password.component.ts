@@ -17,7 +17,7 @@ export class ChangePasswordComponent implements OnInit {
   newPassword = "";
   confirmPassword = "";
 
-  resetToken = "";    // ← AQUI está o que faltava
+  resetToken = "";
 
   loading = false;
   successMsg = "";
