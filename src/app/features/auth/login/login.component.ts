@@ -44,7 +44,7 @@ async submit() {
       sessionStorage.setItem('token', token);
     }
 
-    this.router.navigate(['/profile']);
+    this.router.navigate(['/home']);
 
   } catch (err: any) {
 

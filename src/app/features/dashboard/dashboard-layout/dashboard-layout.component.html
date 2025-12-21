@@ -1,0 +1,33 @@
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">Planeja<span>+</span></div>
+
+    <nav class="nav">
+      <a class="nav-item" routerLink="/home" routerLinkActive="active">Dashboard</a>
+      <a class="nav-item" routerLink="/transactions" routerLinkActive="active">Transações</a>
+      <a class="nav-item" routerLink="/goals" routerLinkActive="active">Metas</a>
+      <a class="nav-item" routerLink="/reports" routerLinkActive="active">Relatórios</a>
+      <a class="nav-item" routerLink="/profile" routerLinkActive="active">Configurações</a>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <header class="topbar">
+      <div class="search">
+        <span class="search-ico">🔎</span>
+        <input placeholder="Buscar..." />
+      </div>
+
+      <div class="actions">
+        <button class="btn ghost" (click)="openNewTx()">+ Nova transação</button>
+        <button class="btn primary">Criar meta</button>
+      </div>
+    </header>
+
+    <section class="content">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+</div>

@@ -1,2 +1,86 @@
-<h1>Planeja+</h1>
-<p>Seu dinheiro sob controle.</p>
+<!-- KPI cards -->
+<section class="kpis">
+  <div class="kpi-card">
+    <div class="kpi-row">
+      <div class="kpi-left">
+        <span class="kpi-ico">💳</span>
+        <div class="kpi-text">
+          <div class="kpi-label">Saldo total</div>
+          <div class="kpi-value">
+            <button class="kpi-button" *ngIf="!editing.saldoTotal" (click)="startEdit('saldoTotal')">{{ saldoTotal }}</button>
+            <div class="kpi-edit" *ngIf="editing.saldoTotal">
+              <input [(ngModel)]="editValues.saldoTotal" />
+              <button class="btn" (click)="saveEdit('saldoTotal')">Salvar</button>
+              <button class="btn ghost" (click)="cancelEdit('saldoTotal')">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-row">
+      <div class="kpi-left">
+        <span class="kpi-ico">🎯</span>
+        <div class="kpi-text">
+          <div class="kpi-label">Meta de guardar</div>
+          <div class="kpi-value">
+            <button class="kpi-button" *ngIf="!editing.metaMensal" (click)="startEdit('metaMensal')">{{ metaMensal }}</button>
+            <div class="kpi-edit" *ngIf="editing.metaMensal">
+              <input [(ngModel)]="editValues.metaMensal" />
+              <button class="btn" (click)="saveEdit('metaMensal')">Salvar</button>
+              <button class="btn ghost" (click)="cancelEdit('metaMensal')">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-row">
+      <div class="kpi-left">
+        <span class="kpi-ico">📌</span>
+        <div class="kpi-text">
+          <div class="kpi-label">Guardado no mês</div>
+          <div class="kpi-value">
+            <button class="kpi-button" *ngIf="!editing.guardadoNoMes" (click)="startEdit('guardadoNoMes')">{{ guardadoNoMes }}</button>
+            <div class="kpi-edit" *ngIf="editing.guardadoNoMes">
+              <input [(ngModel)]="editValues.guardadoNoMes" />
+              <button class="btn" (click)="saveEdit('guardadoNoMes')">Salvar</button>
+              <button class="btn ghost" (click)="cancelEdit('guardadoNoMes')">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- charts -->
+<section class="grid">
+  <article class="card">
+    <h3>Fluxo de Caixa Mensal</h3>
+    <div class="chart">Gráfico (placeholder)</div>
+  </article>
+
+  <article class="card">
+    <h3>Gastos por Categoria</h3>
+    <div class="chart">Donut (placeholder)</div>
+  </article>
+</section>
+
+<!-- alert -->
+<section class="alert">
+  <span class="warn">⚠️</span>
+  <strong>Você já guardou 80% da meta</strong>
+</section>
+
+<!-- table -->
+<app-transacoes
+  [transactions]="transactions"
+  (add)="handleChildAdd($event)"
+  (remove)="onRemove($event)"
+  (edit)="onEdit($event)">
+</app-transacoes>
