@@ -1,20 +1,18 @@
 <div class="shell">
-  <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" [class.open]="mobileNavOpen">
     <div class="brand">Planeja<span>+</span></div>
-
     <nav class="nav">
-      <a class="nav-item" routerLink="/home" routerLinkActive="active">Dashboard</a>
-      <a class="nav-item" routerLink="/transactions" routerLinkActive="active">Transações</a>
-      <a class="nav-item" routerLink="/goals" routerLinkActive="active">Metas</a>
-      <a class="nav-item" routerLink="/reports" routerLinkActive="active">Relatórios</a>
-      <a class="nav-item" routerLink="/profile" routerLinkActive="active">Configurações</a>
+      <a class="nav-item" routerLink="/home" routerLinkActive="active" (click)="closeMobileNav()">Dashboard</a>
+      <a class="nav-item" routerLink="/transactions" routerLinkActive="active" (click)="closeMobileNav()">Transações</a>
+      <a class="nav-item" routerLink="/goals" routerLinkActive="active" (click)="closeMobileNav()">Metas</a>
+      <a class="nav-item" routerLink="/reports" routerLinkActive="active" (click)="closeMobileNav()">Relatórios</a>
+      <a class="nav-item" routerLink="/profile" routerLinkActive="active" (click)="closeMobileNav()">Configurações</a>
     </nav>
   </aside>
 
-  <!-- Main -->
   <main class="main">
     <header class="topbar">
+      <button class="hamburger" aria-label="Abrir menu" (click)="toggleMobileNav()">☰</button>
       <div class="search">
         <span class="search-ico">🔎</span>
         <input placeholder="Buscar..." />
@@ -25,6 +23,8 @@
         <button class="btn primary">Criar meta</button>
       </div>
     </header>
+
+    <div class="mobile-nav-overlay" *ngIf="mobileNavOpen" (click)="closeMobileNav()"></div>
 
     <section class="content">
       <router-outlet></router-outlet>

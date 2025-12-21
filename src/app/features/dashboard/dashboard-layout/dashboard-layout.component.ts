@@ -24,4 +24,14 @@ export class DashboardLayoutComponent {
   openNewTx() {
     this.txService.open();
   }
+
+  mobileNavOpen = false;
+
+  toggleMobileNav() {
+    this.mobileNavOpen = !this.mobileNavOpen;
+  }
+
+  closeMobileNav() {
+    this.mobileNavOpen = false;
+  }
 }
