@@ -34,6 +34,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacoesComponent } from '../transacoes/transacoes.component';
+import { VisibilityService } from '../../../core/service/visibility.service';
 
 
 @Component({
@@ -74,55 +75,52 @@ export class HomeComponent {
   showNewTx = false;
   newTxDesc = '';
   newTxValue = '';
-
-  openNewTx() {
+  constructor(public visibility: VisibilityService) {}
+  abrirNovaTransacao() {
     this.newTxDesc = '';
     this.newTxValue = '';
     this.showNewTx = true;
   }
 
-  openNewTxForIndex(i: number) {
+  abrirNovaTransacaoParaIndice(i: number) {
     const t = this.transactions[i];
     this.editingIndex = i;
     this.newTxDesc = t?.desc || '';
-    // store numeric value without sign
-    const v = this.parseCurrencyString(t?.value || '0');
+    const v = this.converterStringParaNumero(t?.value || '0');
     this.newTxValue = String(Math.abs(Math.round(v)));
     this.showNewTx = true;
   }
 
-  closeNewTx() {
+  fecharNovaTransacao() {
     this.showNewTx = false;
   }
 
-  private parseCurrencyString(v: string): number {
+  private converterStringParaNumero(v: string): number {
     if (!v) return 0;
-    // remove currency symbol and spaces
     let s = v.replace(/R\$|\s/g, '');
-    // if contains dot as thousand separator and comma as decimal, normalize
     s = s.replace(/\./g, '');
     s = s.replace(/,/g, '.');
     const n = parseFloat(s);
     return isNaN(n) ? 0 : n;
   }
 
-  private formatCurrencyNumber(n: number): string {
+  private formatarNumeroParaMoeda(n: number): string {
     const rounded = Math.round(n);
     return 'R$ ' + new Intl.NumberFormat('pt-BR').format(rounded);
   }
 
-  addTransaction() {
+  adicionarTransacao() {
     const desc = this.newTxDesc.trim() || 'Transação';
-    const valueNum = this.parseCurrencyString(this.newTxValue);
-    if (valueNum <= 0) return this.closeNewTx();
+    const valueNum = this.converterStringParaNumero(this.newTxValue);
+    if (valueNum <= 0) return this.fecharNovaTransacao();
     const formatted = '-R$ ' + new Intl.NumberFormat('pt-BR').format(Math.round(valueNum));
 
-    const current = this.parseCurrencyString(this.saldoTotal);
-    const prevEffect = (this.editingIndex === null) ? 0 : this.parseCurrencyString(this.transactions[this.editingIndex!].value);
+    const current = this.converterStringParaNumero(this.saldoTotal);
+    const prevEffect = this.editingIndex === null ? 0 : this.converterStringParaNumero(this.transactions[this.editingIndex!].value);
     const newEffect = -valueNum;
 
     const updated = current + (newEffect - prevEffect);
-    this.saldoTotal = this.formatCurrencyNumber(updated);
+    this.saldoTotal = this.formatarNumeroParaMoeda(updated);
 
     if (this.editingIndex === null) {
       this.transactions.unshift({ desc, value: formatted });
@@ -131,43 +129,43 @@ export class HomeComponent {
     }
 
     this.editingIndex = null;
-    this.closeNewTx();
+    this.fecharNovaTransacao();
   }
 
-  onRemove(i: number) {
-    const prevEffect = this.parseCurrencyString(this.transactions[i].value);
-    const current = this.parseCurrencyString(this.saldoTotal);
+  removerTransacao(i: number) {
+    const prevEffect = this.converterStringParaNumero(this.transactions[i].value);
+    const current = this.converterStringParaNumero(this.saldoTotal);
     const updated = current - prevEffect;
-    this.saldoTotal = this.formatCurrencyNumber(updated);
+    this.saldoTotal = this.formatarNumeroParaMoeda(updated);
     this.transactions.splice(i, 1);
   }
 
-  onEdit(i: number) {
-    this.openNewTxForIndex(i);
+  editarTransacao(i: number) {
+    this.abrirNovaTransacaoParaIndice(i);
   }
 
-  handleChildAdd(tx: { desc: string; value: string }) {
+  receberTransacaoFilha(tx: { desc: string; value: string }) {
     this.newTxDesc = tx.desc || '';
     this.newTxValue = tx.value || '';
     this.editingIndex = null;
-    this.addTransaction();
+    this.adicionarTransacao();
   }
 
-  startEdit(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
+  iniciarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
     if (key === 'saldoTotal') this.editValues.saldoTotal = this.saldoTotal;
     else if (key === 'metaMensal') this.editValues.metaMensal = this.metaMensal;
     else if (key === 'guardadoNoMes') this.editValues.guardadoNoMes = this.guardadoNoMes;
     this.editing[key] = true;
   }
 
-  saveEdit(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
+  salvarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
     if (key === 'saldoTotal') this.saldoTotal = this.editValues.saldoTotal;
     else if (key === 'metaMensal') this.metaMensal = this.editValues.metaMensal;
     else if (key === 'guardadoNoMes') this.guardadoNoMes = this.editValues.guardadoNoMes;
     this.editing[key] = false;
   }
 
-  cancelEdit(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
+  cancelarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
     if (key === 'saldoTotal') this.editValues.saldoTotal = this.saldoTotal;
     else if (key === 'metaMensal') this.editValues.metaMensal = this.metaMensal;
     else if (key === 'guardadoNoMes') this.editValues.guardadoNoMes = this.guardadoNoMes;

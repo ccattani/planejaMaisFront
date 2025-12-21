@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { TransactionService } from '../../../core/service/transaction.service';
+import { VisibilityService } from '../../../core/service/visibility.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -19,19 +20,25 @@ export class DashboardLayoutComponent {
     { label: 'Configurações', path: '/profile' },
   ];
 
-  constructor(private txService: TransactionService) {}
+  constructor(private txService: TransactionService, public visibility: VisibilityService) {}
 
-  openNewTx() {
+  abrirNovaTransacao() {
     this.txService.open();
   }
 
   mobileNavOpen = false;
 
-  toggleMobileNav() {
+  // visibility is managed by VisibilityService
+
+  alternarNavMobile() {
     this.mobileNavOpen = !this.mobileNavOpen;
   }
 
-  closeMobileNav() {
+  fecharNavMobile() {
     this.mobileNavOpen = false;
+  }
+
+  alternarVisibilidade() {
+    this.visibility.toggle();
   }
 }

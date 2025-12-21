@@ -2,29 +2,38 @@
   <aside class="sidebar" [class.open]="mobileNavOpen">
     <div class="brand">Planeja<span>+</span></div>
     <nav class="nav">
-      <a class="nav-item" routerLink="/home" routerLinkActive="active" (click)="closeMobileNav()">Dashboard</a>
-      <a class="nav-item" routerLink="/transactions" routerLinkActive="active" (click)="closeMobileNav()">Transações</a>
-      <a class="nav-item" routerLink="/goals" routerLinkActive="active" (click)="closeMobileNav()">Metas</a>
-      <a class="nav-item" routerLink="/reports" routerLinkActive="active" (click)="closeMobileNav()">Relatórios</a>
-      <a class="nav-item" routerLink="/profile" routerLinkActive="active" (click)="closeMobileNav()">Configurações</a>
+      <a class="nav-item" routerLink="/home" routerLinkActive="active" (click)="fecharNavMobile()">Dashboard</a>
+      <a class="nav-item" routerLink="/transactions" routerLinkActive="active" (click)="fecharNavMobile()">Transações</a>
+      <a class="nav-item" routerLink="/goals" routerLinkActive="active" (click)="fecharNavMobile()">Metas</a>
+      <a class="nav-item" routerLink="/reports" routerLinkActive="active" (click)="fecharNavMobile()">Relatórios</a>
+      <a class="nav-item" routerLink="/profile" routerLinkActive="active" (click)="fecharNavMobile()">Configurações</a>
     </nav>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <button class="hamburger" aria-label="Abrir menu" (click)="toggleMobileNav()">☰</button>
+      <button class="hamburger" aria-label="Abrir menu" (click)="alternarNavMobile()">☰</button>
       <div class="search">
         <span class="search-ico">🔎</span>
         <input placeholder="Buscar..." />
       </div>
 
       <div class="actions">
-        <button class="btn ghost" (click)="openNewTx()">+ Nova transação</button>
+        <button class="btn ghost" (click)="abrirNovaTransacao()">+ Nova transação</button>
         <button class="btn primary">Criar meta</button>
+        <button
+          class="btn ghost visibility-toggle"
+          (click)="visibility.toggle()"
+          [attr.aria-pressed]="(visibility.showBalances$ | async)"
+          [title]="(visibility.showBalances$ | async) ? 'Ocultar valores' : 'Mostrar valores'"
+        >
+          <span *ngIf="(visibility.showBalances$ | async)">👁️</span>
+          <span *ngIf="!(visibility.showBalances$ | async)">🙈</span>
+        </button>
       </div>
     </header>
 
-    <div class="mobile-nav-overlay" *ngIf="mobileNavOpen" (click)="closeMobileNav()"></div>
+    <div class="mobile-nav-overlay" *ngIf="mobileNavOpen" (click)="fecharNavMobile()"></div>
 
     <section class="content">
       <router-outlet></router-outlet>

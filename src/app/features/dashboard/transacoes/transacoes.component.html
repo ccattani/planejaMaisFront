@@ -1,19 +1,19 @@
-<!-- table -->
 <section class="card table-card">
   <div class="table-head">
     <h3>Últimas Transações</h3>
     <span>Transações</span>
   </div>
 
+  <div style="font-size:12px; opacity:.6; margin-bottom:6px;">Total transações: {{ transactions.length }}</div>
+
   <div class="table">
-    <div class="row" *ngFor="let t of transactions">
+    <div class="row" *ngFor="let t of transactions; let i = index">
       <div class="desc">{{ t.desc }}</div>
       <div class="val">{{ t.value }}</div>
     </div>
   </div>
 </section>
 
-<!-- Nova Transação Modal -->
 <div class="modal-overlay" *ngIf="showNewTx">
   <div class="modal">
     <h3>Nova Transação</h3>
@@ -22,8 +22,8 @@
     <label>Valor (use apenas números ou R$  format)</label>
     <input [(ngModel)]="newTxValue" placeholder="Ex: 230 ou 230.50" />
     <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
-      <button class="btn ghost" (click)="closeNewTx()">Cancelar</button>
-      <button class="btn primary" (click)="addTransaction()">Salvar</button>
+      <button class="btn ghost" (click)="fecharNovaTransacao()">Cancelar</button>
+      <button class="btn primary" (click)="adicionarTransacao()">Salvar</button>
     </div>
   </div>
 </div>

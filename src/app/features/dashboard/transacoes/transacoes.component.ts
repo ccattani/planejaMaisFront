@@ -37,18 +37,18 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  onRemove(i: number) { this.remove.emit(i); }
-  onEdit(i: number) { this.edit.emit(i); }
+  remover(i: number) { this.remove.emit(i); }
+  editar(i: number) { this.edit.emit(i); }
 
-  closeNewTx() {
+  fecharNovaTransacao() {
     this.showNewTx = false;
     this.newTxDesc = '';
     this.newTxValue = '';
   }
 
-  addTransaction() {
+  adicionarTransacao() {
     const tx: Transaction = { desc: this.newTxDesc, value: this.newTxValue };
     this.add.emit(tx);
-    this.closeNewTx();
+    this.fecharNovaTransacao();
   }
 }
