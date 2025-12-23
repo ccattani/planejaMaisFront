@@ -64,7 +64,7 @@ export class HomeComponent {
   transactions = [
     { desc: 'Supermercado', value: '-R$ 230' },
     { desc: 'Uber', value: '-R$ 32' },
-    { desc: 'Salário Itaú', value: '+R$ 4.000' },
+    { desc: 'Salário', value: '+R$ 4.000' },
     { desc: 'Restaurante', value: '-R$ 120' },
   ];
 
