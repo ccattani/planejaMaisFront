@@ -22,15 +22,15 @@ export class TransacoesComponent implements OnInit, OnDestroy {
   @Output() edit = new EventEmitter<number>();
   @Output() add = new EventEmitter<Transaction>();
 
-  showNewTx = false;
-  newTxDesc = '';
-  newTxValue = '';
+  mostrarNovaTransacao = false;
+  novaTransacaoDescricao = '';
+  novaTransacaoValor = '';
   private sub?: Subscription;
 
-  constructor(private txService: TransactionService) {}
+  constructor(private servicoTransacao: TransactionService) {}
 
   ngOnInit(): void {
-    this.sub = this.txService.open$().subscribe(() => (this.showNewTx = true));
+    this.sub = this.servicoTransacao.open$().subscribe(() => (this.mostrarNovaTransacao = true));
   }
 
   ngOnDestroy(): void {
@@ -41,14 +41,14 @@ export class TransacoesComponent implements OnInit, OnDestroy {
   editar(i: number) { this.edit.emit(i); }
 
   fecharNovaTransacao() {
-    this.showNewTx = false;
-    this.newTxDesc = '';
-    this.newTxValue = '';
+    this.mostrarNovaTransacao = false;
+    this.novaTransacaoDescricao = '';
+    this.novaTransacaoValor = '';
   }
 
   adicionarTransacao() {
-    const tx: Transaction = { desc: this.newTxDesc, value: this.newTxValue };
-    this.add.emit(tx);
+    const transacao: Transaction = { desc: this.novaTransacaoDescricao, value: this.novaTransacaoValor };
+    this.add.emit(transacao);
     this.fecharNovaTransacao();
   }
 }

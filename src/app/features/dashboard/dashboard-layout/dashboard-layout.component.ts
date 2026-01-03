@@ -20,15 +20,13 @@ export class DashboardLayoutComponent {
     { label: 'Configurações', path: '/profile' },
   ];
 
-  constructor(private txService: TransactionService, public visibility: VisibilityService) {}
+  constructor(private servicoTransacao: TransactionService, public visibility: VisibilityService) {}
 
-  abrirNovaTransacao() {
-    this.txService.open();
+  abrirTransacao() {
+    this.servicoTransacao.open();
   }
 
   mobileNavOpen = false;
-
-  // visibility is managed by VisibilityService
 
   alternarNavMobile() {
     this.mobileNavOpen = !this.mobileNavOpen;

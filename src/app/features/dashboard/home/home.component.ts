@@ -39,36 +39,36 @@ export class HomeComponent {
 
   editingIndex: number | null = null;
 
-  showNewTx = false;
-  newTxDesc = '';
-  newTxValue = '';
+  mostrarNovaTransacao = false;
+  novaTransacaoDescricao = '';
+  novaTransacaoValor = '';
   constructor(public visibility: VisibilityService, private services: ServicesService) {}
   abrirNovaTransacao() {
-    this.newTxDesc = '';
-    this.newTxValue = '';
-    this.showNewTx = true;
+    this.novaTransacaoDescricao = '';
+    this.novaTransacaoValor = '';
+    this.mostrarNovaTransacao = true;
   }
 
   abrirNovaTransacaoParaIndice(i: number) {
-    const t = this.transactions[i];
+    const transacao = this.transactions[i];
     this.editingIndex = i;
-    this.newTxDesc = t?.desc || '';
-    const v = this.converterStringParaNumero(t?.value || '0');
-    this.newTxValue = String(Math.abs(Math.round(v)));
-    this.showNewTx = true;
+    this.novaTransacaoDescricao = transacao?.desc || '';
+    const valorNumerico = this.converterStringParaNumero(transacao?.value || '0');
+    this.novaTransacaoValor = String(Math.abs(Math.round(valorNumerico)));
+    this.mostrarNovaTransacao = true;
   }
 
   fecharNovaTransacao() {
-    this.showNewTx = false;
+    this.mostrarNovaTransacao = false;
   }
 
   private converterStringParaNumero(v: string): number {
     if (!v) return 0;
-    let s = v.replace(/R\$|\s/g, '');
-    s = s.replace(/\./g, '');
-    s = s.replace(/,/g, '.');
-    const n = parseFloat(s);
-    return isNaN(n) ? 0 : n;
+    let stringLimpa = v.replace(/R\$|\s/g, '');
+    stringLimpa = stringLimpa.replace(/\./g, '');
+    stringLimpa = stringLimpa.replace(/,/g, '.');
+    const numero = parseFloat(stringLimpa);
+    return isNaN(numero) ? 0 : numero;
   }
 
   private formatarNumeroParaMoeda(n: number): string {
@@ -77,38 +77,38 @@ export class HomeComponent {
   }
 
   async adicionarTransacao() {
-    const desc = this.newTxDesc.trim() || 'Transação';
-    const valueNum = this.converterStringParaNumero(this.newTxValue);
-    if (valueNum <= 0) return this.fecharNovaTransacao();
-    const formatted = '-R$ ' + new Intl.NumberFormat('pt-BR').format(Math.round(valueNum));
+    const descricao = this.novaTransacaoDescricao.trim() || 'Transação';
+    const valorNumerico = this.converterStringParaNumero(this.novaTransacaoValor);
+    if (valorNumerico <= 0) return this.fecharNovaTransacao();
+    const valorFormatado = '-R$ ' + new Intl.NumberFormat('pt-BR').format(Math.round(valorNumerico));
 
-    const now = new Date().toISOString();
+    const agora = new Date().toISOString();
     const payload = {
-      description: desc,
-      value: -valueNum,
-      category: this.newTxDesc,
-      date: now,
-      updatedAt: now
+      description: descricao,
+      value: -valorNumerico,
+      category: descricao,
+      date: agora,
+      updatedAt: agora
     };
 
     try {
       await this.services.createExpense(payload);
     } catch (err) {
       console.error('Erro ao criar lançamento:', err);
-
+      // mantendo atualização otimista na UI
     }
 
-    const current = this.converterStringParaNumero(this.saldoTotal);
-    const prevEffect = this.editingIndex === null ? 0 : this.converterStringParaNumero(this.transactions[this.editingIndex!].value);
-    const newEffect = -valueNum;
+    const saldoAtual = this.converterStringParaNumero(this.saldoTotal);
+    const efeitoAnterior = this.editingIndex === null ? 0 : this.converterStringParaNumero(this.transactions[this.editingIndex!].value);
+    const efeitoNovo = -valorNumerico;
 
-    const updated = current + (newEffect - prevEffect);
-    this.saldoTotal = this.formatarNumeroParaMoeda(updated);
+    const saldoAtualizado = saldoAtual + (efeitoNovo - efeitoAnterior);
+    this.saldoTotal = this.formatarNumeroParaMoeda(saldoAtualizado);
 
     if (this.editingIndex === null) {
-      this.transactions.unshift({ desc, value: formatted });
+      this.transactions.unshift({ desc: descricao, value: valorFormatado });
     } else {
-      this.transactions[this.editingIndex] = { desc, value: formatted };
+      this.transactions[this.editingIndex] = { desc: descricao, value: valorFormatado };
     }
 
     this.editingIndex = null;
@@ -116,10 +116,10 @@ export class HomeComponent {
   }
 
   removerTransacao(i: number) {
-    const prevEffect = this.converterStringParaNumero(this.transactions[i].value);
-    const current = this.converterStringParaNumero(this.saldoTotal);
-    const updated = current - prevEffect;
-    this.saldoTotal = this.formatarNumeroParaMoeda(updated);
+    const efeitoAnterior = this.converterStringParaNumero(this.transactions[i].value);
+    const saldoAtual = this.converterStringParaNumero(this.saldoTotal);
+    const saldoAtualizado = saldoAtual - efeitoAnterior;
+    this.saldoTotal = this.formatarNumeroParaMoeda(saldoAtualizado);
     this.transactions.splice(i, 1);
   }
 
@@ -127,9 +127,9 @@ export class HomeComponent {
     this.abrirNovaTransacaoParaIndice(i);
   }
 
-  receberTransacaoFilha(tx: { desc: string; value: string }) {
-    this.newTxDesc = tx.desc || '';
-    this.newTxValue = tx.value || '';
+  receberTransacaoFilha(transacao: { desc: string; value: string }) {
+    this.novaTransacaoDescricao = transacao.desc || '';
+    this.novaTransacaoValor = transacao.value || '';
     this.editingIndex = null;
     this.adicionarTransacao();
   }
