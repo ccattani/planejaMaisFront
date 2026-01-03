@@ -17,9 +17,9 @@
 <div class="modal-overlay" *ngIf="mostrarNovaTransacao">
   <div class="modal">
     <h3>Nova Transação</h3>
-    <label>Lugar</label>
+    <label>Descrição</label>
     <input [(ngModel)]="novaTransacaoDescricao" placeholder="Ex: Padaria" />
-    <label>Valor (use apenas números ou R$  format)</label>
+    <label>Valor</label>
     <input [(ngModel)]="novaTransacaoValor" placeholder="Ex: 230 ou 230.50" />
     <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
       <button class="btn ghost" (click)="fecharNovaTransacao()">Cancelar</button>

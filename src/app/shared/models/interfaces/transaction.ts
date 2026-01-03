@@ -5,3 +5,10 @@ export interface TransactionPayload {
   date: string;
   updatedAt: string;
 }
+
+export interface Transaction {
+  desc: string;
+  value: string;
+  numeric?: number; // efeito numérico (por ex. -230)
+  index?: number;
+}

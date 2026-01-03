@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TransacoesComponent } from '../transacoes/transacoes.component';
 import { VisibilityService } from '../../../core/service/visibility.service';
 import { ServicesService } from '../../../core/service/services.service';
-
+import { TransactionService } from '../../../core/service/transaction.service';
 
 @Component({
   selector: 'app-home',
@@ -39,29 +39,7 @@ export class HomeComponent {
 
   editingIndex: number | null = null;
 
-  mostrarNovaTransacao = false;
-  novaTransacaoDescricao = '';
-  novaTransacaoValor = '';
-  constructor(public visibility: VisibilityService, private services: ServicesService) {}
-  abrirNovaTransacao() {
-    this.novaTransacaoDescricao = '';
-    this.novaTransacaoValor = '';
-    this.mostrarNovaTransacao = true;
-  }
-
-  abrirNovaTransacaoParaIndice(i: number) {
-    const transacao = this.transactions[i];
-    this.editingIndex = i;
-    this.novaTransacaoDescricao = transacao?.desc || '';
-    const valorNumerico = this.converterStringParaNumero(transacao?.value || '0');
-    this.novaTransacaoValor = String(Math.abs(Math.round(valorNumerico)));
-    this.mostrarNovaTransacao = true;
-  }
-
-  fecharNovaTransacao() {
-    this.mostrarNovaTransacao = false;
-  }
-
+  constructor(public visibility: VisibilityService, private services: ServicesService, private servicoTransacao: TransactionService) {}
   private converterStringParaNumero(v: string): number {
     if (!v) return 0;
     let stringLimpa = v.replace(/R\$|\s/g, '');
@@ -76,43 +54,27 @@ export class HomeComponent {
     return 'R$ ' + new Intl.NumberFormat('pt-BR').format(rounded);
   }
 
-  async adicionarTransacao() {
-    const descricao = this.novaTransacaoDescricao.trim() || 'Transação';
-    const valorNumerico = this.converterStringParaNumero(this.novaTransacaoValor);
-    if (valorNumerico <= 0) return this.fecharNovaTransacao();
-    const valorFormatado = '-R$ ' + new Intl.NumberFormat('pt-BR').format(Math.round(valorNumerico));
-
-    const agora = new Date().toISOString();
-    const payload = {
-      description: descricao,
-      value: -valorNumerico,
-      category: descricao,
-      date: agora,
-      updatedAt: agora
-    };
-
-    try {
-      await this.services.createExpense(payload);
-    } catch (err) {
-      console.error('Erro ao criar lançamento:', err);
-      // mantendo atualização otimista na UI
-    }
+  receberTransacaoFilha(transacao: { desc: string; value: string; numeric?: number; index?: number }) {
+    const descricao = transacao.desc || 'Transação';
+    const valorFormatado = transacao.value || '';
+    const efeitoNovo = transacao.numeric ?? -this.converterStringParaNumero(valorFormatado);
 
     const saldoAtual = this.converterStringParaNumero(this.saldoTotal);
-    const efeitoAnterior = this.editingIndex === null ? 0 : this.converterStringParaNumero(this.transactions[this.editingIndex!].value);
-    const efeitoNovo = -valorNumerico;
+    const indice = transacao.index ?? this.editingIndex;
+    const efeitoAnterior = (indice === null || indice === undefined) ? 0 : this.converterStringParaNumero(this.transactions[indice].value);
 
     const saldoAtualizado = saldoAtual + (efeitoNovo - efeitoAnterior);
     this.saldoTotal = this.formatarNumeroParaMoeda(saldoAtualizado);
 
-    if (this.editingIndex === null) {
-      this.transactions.unshift({ desc: descricao, value: valorFormatado });
+    if (indice === null || indice === undefined) {
+      this.transactions = [{ desc: descricao, value: valorFormatado }, ...this.transactions];
     } else {
-      this.transactions[this.editingIndex] = { desc: descricao, value: valorFormatado };
+      const updated = [...this.transactions];
+      updated[indice] = { desc: descricao, value: valorFormatado };
+      this.transactions = updated;
     }
 
     this.editingIndex = null;
-    this.fecharNovaTransacao();
   }
 
   removerTransacao(i: number) {
@@ -124,14 +86,9 @@ export class HomeComponent {
   }
 
   editarTransacao(i: number) {
-    this.abrirNovaTransacaoParaIndice(i);
-  }
-
-  receberTransacaoFilha(transacao: { desc: string; value: string }) {
-    this.novaTransacaoDescricao = transacao.desc || '';
-    this.novaTransacaoValor = transacao.value || '';
-    this.editingIndex = null;
-    this.adicionarTransacao();
+    // Solicita ao componente Transacoes que abra o modal em modo edição com os dados da transação
+    const t = this.transactions[i];
+    this.servicoTransacao.open({ desc: t.desc, value: t.value, index: i });
   }
 
   iniciarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {

@@ -1,13 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TransactionService } from '../../../core/service/transaction.service';
-
-export interface Transaction {
-  desc: string;
-  value: string;
-}
+import { ServicesService } from '../../../core/service/services.service';
+import { Transaction } from '../../../shared/models/interfaces/transaction';
 
 @Component({
   selector: 'app-transacoes',
@@ -16,7 +13,7 @@ export interface Transaction {
   templateUrl: './transacoes.component.html',
   styleUrls: ['./transacoes.component.scss']
 })
-export class TransacoesComponent implements OnInit, OnDestroy {
+export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
   @Input() transactions: Transaction[] = [];
   @Output() remove = new EventEmitter<number>();
   @Output() edit = new EventEmitter<number>();
@@ -26,11 +23,46 @@ export class TransacoesComponent implements OnInit, OnDestroy {
   novaTransacaoDescricao = '';
   novaTransacaoValor = '';
   private sub?: Subscription;
+  editarIndice: number | null = null;
 
-  constructor(private servicoTransacao: TransactionService) {}
+  constructor(private servicoTransacao: TransactionService, private services: ServicesService, private cdr: ChangeDetectorRef) {}
 
   ngOnInit(): void {
-    this.sub = this.servicoTransacao.open$().subscribe(() => (this.mostrarNovaTransacao = true));
+    this.sub = this.servicoTransacao.open$().subscribe((payload) => {
+      this.mostrarNovaTransacao = true;
+      if (payload && typeof payload !== 'undefined') {
+        this.editarIndice = payload.index ?? null;
+        this.novaTransacaoDescricao = payload.desc || '';
+        const valor = payload.value ? String(Math.abs(Math.round(this.converterStringParaNumero(payload.value))) ) : '';
+        this.novaTransacaoValor = valor;
+      } else {
+        this.editarIndice = null;
+        this.novaTransacaoDescricao = '';
+        this.novaTransacaoValor = '';
+      }
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['transactions']) {
+      console.log('TransacoesComponent: transactions Input mudou ->', changes['transactions'].currentValue);
+      // Forçar detecção caso o pai substitua a lista
+      this.cdr.detectChanges();
+    }
+  }
+
+  private converterStringParaNumero(v: string): number {
+    if (!v) return 0;
+    let stringLimpa = v.replace(/R\$|\s/g, '');
+    stringLimpa = stringLimpa.replace(/\./g, '');
+    stringLimpa = stringLimpa.replace(/,/g, '.');
+    const numero = parseFloat(stringLimpa);
+    return isNaN(numero) ? 0 : numero;
+  }
+
+  private formatarValorComoMoeda(n: number): string {
+    const rounded = Math.round(n);
+    return (n < 0 ? '-' : '') + 'R$ ' + new Intl.NumberFormat('pt-BR').format(Math.abs(rounded));
   }
 
   ngOnDestroy(): void {
@@ -44,11 +76,50 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     this.mostrarNovaTransacao = false;
     this.novaTransacaoDescricao = '';
     this.novaTransacaoValor = '';
+    this.editarIndice = null;
   }
 
-  adicionarTransacao() {
-    const transacao: Transaction = { desc: this.novaTransacaoDescricao, value: this.novaTransacaoValor };
-    this.add.emit(transacao);
+  async adicionarTransacao() {
+    const descricao = this.novaTransacaoDescricao.trim() || 'Transação';
+    const valorNumerico = this.converterStringParaNumero(this.novaTransacaoValor);
+    if (valorNumerico <= 0) return this.fecharNovaTransacao();
+
+    const valorFormatado = this.formatarValorComoMoeda(-valorNumerico);
+
+    const agora = new Date().toISOString();
+    const payload = {
+      description: descricao,
+      value: -valorNumerico,
+      category: descricao,
+      date: agora,
+      updatedAt: agora,
+    };
+
+    try {
+      console.log('Criando transação:', payload);
+      await this.services.createExpense(payload);
+      console.log('Transação criada com sucesso (API)');
+    } catch (err) {
+      console.error('Erro ao criar lançamento (API):', err);
+    }
+
+    const evento: Transaction = { desc: descricao, value: valorFormatado, numeric: -valorNumerico, index: this.editarIndice ?? undefined };
+    console.log('Emitindo evento adicionaTransacao ->', evento);
+    this.add.emit(evento);
+
+    try {
+      if (evento.index === undefined || evento.index === null) {
+        this.transactions = [{ desc: evento.desc, value: evento.value }, ...this.transactions];
+      } else {
+        const updated = [...this.transactions];
+        updated[evento.index] = { desc: evento.desc, value: evento.value };
+        this.transactions = updated;
+      }
+      this.cdr.detectChanges();
+    } catch (e) {
+      console.warn('Falha na atualização otimista local:', e);
+    }
+
     this.fecharNovaTransacao();
   }
 }

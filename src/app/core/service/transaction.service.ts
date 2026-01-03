@@ -1,15 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 
+export interface TransactionOpenPayload {
+  desc?: string;
+  value?: string;
+  index?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class TransactionService {
-  private openSubject = new Subject<void>();
+  private openSubject = new Subject<TransactionOpenPayload | void>();
 
-  open$(): Observable<void> {
+  open$(): Observable<TransactionOpenPayload | void> {
     return this.openSubject.asObservable();
   }
 
-  open() {
-    this.openSubject.next();
+  open(payload?: TransactionOpenPayload) {
+    this.openSubject.next(payload);
   }
 }
