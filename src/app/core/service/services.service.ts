@@ -4,6 +4,7 @@ import { firstValueFrom } from "rxjs";
 import { RegisterPayload } from "../../shared/models/interfaces/register";
 import { LoginPayload } from "../../shared/models/interfaces/login";
 import { UpdatePayload } from "../../shared/models/interfaces/update";
+import { TransactionPayload } from "../../shared/models/interfaces/transaction";
 
 @Injectable({
   providedIn: "root",
@@ -67,4 +68,11 @@ export class ServicesService {
       )
     );
   }
+
+  createExpense(payload: TransactionPayload) {
+    return firstValueFrom(
+      this.http.post(`${this.api}/expense/create`, payload)
+    );
+  }
+
 }

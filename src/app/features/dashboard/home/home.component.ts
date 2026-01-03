@@ -1,40 +1,9 @@
-// import { Component } from "@angular/core";
-// import { ServicesService } from "../../../core/service/services.service";
-// import { Router } from "@angular/router";
-
-// @Component({
-//   selector: "app-home",
-//   standalone: true,
-//   imports: [],
-//   templateUrl: "./home.component.html",
-//   styleUrl: "./home.component.scss",
-// })
-// export class HomeComponent {
-//   saldoTotal = "R$ 3.250";
-//   metaMensal = "R$ 4.000";
-//   guardadoNoMes = "R$ 1.200";
-
-//   constructor(private service: ServicesService, private router: Router) {}
-
-//   ngOnInit() {
-//     this.loadUser();
-//   }
-
-//   async loadUser() {
-//     try {
-//       const data = await this.service.getMyAccount();
-//       console.log("Minha conta:", data);
-//     } catch (err) {
-//       console.error("Erro ao carregar conta:", err);
-//     }
-//   }
-// }
-
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacoesComponent } from '../transacoes/transacoes.component';
 import { VisibilityService } from '../../../core/service/visibility.service';
+import { ServicesService } from '../../../core/service/services.service';
 
 
 @Component({
@@ -68,14 +37,12 @@ export class HomeComponent {
     { desc: 'Restaurante', value: '-R$ 120' },
   ];
 
-  // Home no longer opens the shared modal directly; TransacoesComponent handles it.
-
   editingIndex: number | null = null;
 
   showNewTx = false;
   newTxDesc = '';
   newTxValue = '';
-  constructor(public visibility: VisibilityService) {}
+  constructor(public visibility: VisibilityService, private services: ServicesService) {}
   abrirNovaTransacao() {
     this.newTxDesc = '';
     this.newTxValue = '';
@@ -109,11 +76,27 @@ export class HomeComponent {
     return 'R$ ' + new Intl.NumberFormat('pt-BR').format(rounded);
   }
 
-  adicionarTransacao() {
+  async adicionarTransacao() {
     const desc = this.newTxDesc.trim() || 'Transação';
     const valueNum = this.converterStringParaNumero(this.newTxValue);
     if (valueNum <= 0) return this.fecharNovaTransacao();
     const formatted = '-R$ ' + new Intl.NumberFormat('pt-BR').format(Math.round(valueNum));
+
+    const now = new Date().toISOString();
+    const payload = {
+      description: desc,
+      value: -valueNum,
+      category: this.newTxDesc,
+      date: now,
+      updatedAt: now
+    };
+
+    try {
+      await this.services.createExpense(payload);
+    } catch (err) {
+      console.error('Erro ao criar lançamento:', err);
+
+    }
 
     const current = this.converterStringParaNumero(this.saldoTotal);
     const prevEffect = this.editingIndex === null ? 0 : this.converterStringParaNumero(this.transactions[this.editingIndex!].value);
