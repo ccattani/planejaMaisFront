@@ -21,6 +21,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
 
   mostrarNovaTransacao = false;
   novaTransacaoDescricao = '';
+  novaTransacaoCategoria = '';
   novaTransacaoValor = '';
   novaTransacaoTipo: 'entrada' | 'saida' = 'saida';
   private sub?: Subscription;
@@ -34,6 +35,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
       if (payload && typeof payload !== 'undefined') {
         this.editarIndice = payload.index ?? null;
         this.novaTransacaoDescricao = payload.desc || '';
+        this.novaTransacaoCategoria = payload.category ?? '';
         const valor = payload.value ? String(Math.abs(Math.round(this.converterStringParaNumero(payload.value))) ) : '';
         this.novaTransacaoValor = valor;
         // determina se é entrada (positivo) ou saída (negativo)
@@ -41,6 +43,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
       } else {
         this.editarIndice = null;
         this.novaTransacaoDescricao = '';
+        this.novaTransacaoCategoria = '';
         this.novaTransacaoValor = '';
         this.novaTransacaoTipo = 'saida';
       }
@@ -80,6 +83,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
   fecharNovaTransacao() {
     this.mostrarNovaTransacao = false;
     this.novaTransacaoDescricao = '';
+    this.novaTransacaoCategoria = '';
     this.novaTransacaoValor = '';
     this.novaTransacaoTipo = 'saida';
     this.editarIndice = null;
@@ -94,10 +98,12 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
     const valorFormatado = this.formatarValorComoMoeda(signedValue);
 
     const agora = new Date().toISOString();
+    const category = this.novaTransacaoCategoria.trim() || descricao;
+
     const payload = {
       description: descricao,
       value: signedValue,
-      category: descricao,
+      category: category,
       date: agora,
       updatedAt: agora,
     };

@@ -5,6 +5,7 @@ export interface TransactionOpenPayload {
   desc?: string;
   value?: string;
   index?: number;
+  category?: string;
 }
 
 @Injectable({ providedIn: 'root' })
