@@ -59,3 +59,9 @@
   gap:8px;
 }
 .modal input{ padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); }
+
+/* Inline value + type selector */
+.field-inline{ display:flex; flex-direction:column; gap:6px; }
+.field-inline-controls{ display:flex; gap:8px; align-items:center; }
+.field-inline-controls input{ flex:1; min-width:0; }
+.type-select{ width:120px; padding:10px; border-radius:8px; border:1px solid rgba(0,0,0,0.08); background:#fff; }

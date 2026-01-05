@@ -22,6 +22,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
   mostrarNovaTransacao = false;
   novaTransacaoDescricao = '';
   novaTransacaoValor = '';
+  novaTransacaoTipo: 'entrada' | 'saida' = 'saida';
   private sub?: Subscription;
   editarIndice: number | null = null;
 
@@ -35,10 +36,13 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
         this.novaTransacaoDescricao = payload.desc || '';
         const valor = payload.value ? String(Math.abs(Math.round(this.converterStringParaNumero(payload.value))) ) : '';
         this.novaTransacaoValor = valor;
+        // determina se é entrada (positivo) ou saída (negativo)
+        this.novaTransacaoTipo = this.converterStringParaNumero(payload.value ?? '') < 0 ? 'saida' : 'entrada';
       } else {
         this.editarIndice = null;
         this.novaTransacaoDescricao = '';
         this.novaTransacaoValor = '';
+        this.novaTransacaoTipo = 'saida';
       }
     });
   }
@@ -62,7 +66,8 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
 
   private formatarValorComoMoeda(n: number): string {
     const rounded = Math.round(n);
-    return (n < 0 ? '-' : '') + 'R$ ' + new Intl.NumberFormat('pt-BR').format(Math.abs(rounded));
+    const sign = n < 0 ? '-' : '+';
+    return sign + 'R$ ' + new Intl.NumberFormat('pt-BR').format(Math.abs(rounded));
   }
 
   ngOnDestroy(): void {
@@ -76,6 +81,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
     this.mostrarNovaTransacao = false;
     this.novaTransacaoDescricao = '';
     this.novaTransacaoValor = '';
+    this.novaTransacaoTipo = 'saida';
     this.editarIndice = null;
   }
 
@@ -84,12 +90,13 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
     const valorNumerico = this.converterStringParaNumero(this.novaTransacaoValor);
     if (valorNumerico <= 0) return this.fecharNovaTransacao();
 
-    const valorFormatado = this.formatarValorComoMoeda(-valorNumerico);
+    const signedValue = this.novaTransacaoTipo === 'saida' ? -valorNumerico : valorNumerico;
+    const valorFormatado = this.formatarValorComoMoeda(signedValue);
 
     const agora = new Date().toISOString();
     const payload = {
       description: descricao,
-      value: -valorNumerico,
+      value: signedValue,
       category: descricao,
       date: agora,
       updatedAt: agora,
@@ -103,7 +110,7 @@ export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
       console.error('Erro ao criar lançamento (API):', err);
     }
 
-    const evento: Transaction = { desc: descricao, value: valorFormatado, numeric: -valorNumerico, index: this.editarIndice ?? undefined };
+    const evento: Transaction = { desc: descricao, value: valorFormatado, numeric: signedValue, index: this.editarIndice ?? undefined };
     console.log('Emitindo evento adicionaTransacao ->', evento);
     this.add.emit(evento);
 
