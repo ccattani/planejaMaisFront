@@ -69,6 +69,10 @@ export class ServicesService {
     );
   }
 
+  getAllTransactions() {
+    return firstValueFrom(this.http.get(`${this.api}/expense/myExpenseAll`));
+  }
+
   createExpense(payload: TransactionPayload) {
     return firstValueFrom(
       this.http.post(`${this.api}/expense/create`, payload)

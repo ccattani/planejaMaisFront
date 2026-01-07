@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Transaction } from './../../../shared/models/interfaces/transaction';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TransacoesComponent } from '../transacoes/transacoes.component';
@@ -13,7 +14,7 @@ import { TransactionService } from '../../../core/service/transaction.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit {
   saldoTotal = 'R$ 3.250';
   metaMensal = 'R$ 4.000';
   guardadoNoMes = 'R$ 1.200';
@@ -30,19 +31,34 @@ export class HomeComponent {
     guardadoNoMes: this.guardadoNoMes,
   };
 
-  transactions = [
-    { desc: 'Supermercado', value: '-R$ 230' },
-    { desc: 'Uber', value: '-R$ 32' },
-    { desc: 'Salário', value: '+R$ 4.000' },
-    { desc: 'Restaurante', value: '-R$ 120' },
-  ];
+  transactions: Transaction[] = [];
 
   editingIndex: number | null = null;
 
   constructor(public visibility: VisibilityService, private services: ServicesService, private servicoTransacao: TransactionService) {}
-  private converterStringParaNumero(v: string): number {
-    if (!v) return 0;
-    let stringLimpa = v.replace(/R\$|\s/g, '');
+
+  async ngOnInit(): Promise<void> {
+    try {
+      const res: any = await this.services.getAllTransactions();
+      const arr = Array.isArray(res) ? res : (res?.data ?? []);
+      const mapped = (arr as any[])
+        .slice(0, 5)
+        .map((transaction) => {
+          const valor = transaction.value ?? 0;
+          const sinal = valor >= 0 ? '+' : '-';
+          const valorFormatado = this.formatarNumeroParaMoeda(Math.abs(valor));
+          const descricao = transaction.description ?? (transaction.desc as string) ?? 'Transação';
+          return { desc: descricao, value: sinal + valorFormatado, numeric: valor };
+        });
+      this.transactions = mapped;
+    } catch (error) {
+      console.error('Erro ao buscar transações', error);
+    }
+  }
+
+  private converterStringParaNumero(valorStr: string): number {
+    if (!valorStr) return 0;
+    let stringLimpa = valorStr.replace(/R\$|\s/g, '');
     stringLimpa = stringLimpa.replace(/\./g, '');
     stringLimpa = stringLimpa.replace(/,/g, '.');
     const numero = parseFloat(stringLimpa);
@@ -87,8 +103,8 @@ export class HomeComponent {
 
   editarTransacao(i: number) {
     // Solicita ao componente Transacoes que abra o modal em modo edição com os dados da transação
-    const t = this.transactions[i];
-    this.servicoTransacao.open({ desc: t.desc, value: t.value, index: i });
+    const transacao = this.transactions[i];
+    this.servicoTransacao.open({ desc: transacao.desc, value: transacao.value, index: i });
   }
 
   iniciarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {

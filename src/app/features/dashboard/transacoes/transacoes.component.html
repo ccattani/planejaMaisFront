@@ -7,11 +7,20 @@
   <div style="font-size:12px; opacity:.6; margin-bottom:6px;">Total transações: {{ transactions.length }}</div>
 
   <div class="table">
-    <div class="row" *ngFor="let transacao of transactions; let i = index">
+    <div class="row" *ngFor="let transacao of pagedTransactions; let i = index">
       <div class="desc">{{ transacao.desc }}</div>
       <div class="val">{{ transacao.value }}</div>
     </div>
   </div>
+
+  <mat-paginator
+    [length]="transactions.length"
+    [pageSize]="pageSize"
+    [pageSizeOptions]="[10]"
+    [pageIndex]="pageIndex"
+    showFirstLastButtons
+    (page)="onPageChange($event)">
+  </mat-paginator>
 </section>
 
 <div class="modal-overlay" *ngIf="mostrarNovaTransacao">
