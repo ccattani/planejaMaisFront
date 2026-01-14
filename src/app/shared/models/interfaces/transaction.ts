@@ -7,8 +7,10 @@ export interface TransactionPayload {
 }
 
 export interface Transaction {
+  id?: string;
   desc: string;
   value: string;
   numeric?: number; // efeito numérico (por ex. -230)
   index?: number;
+  category?: string;
 }

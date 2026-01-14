@@ -79,4 +79,14 @@ export class ServicesService {
     );
   }
 
+  updateExpense(id: string, payload: TransactionPayload) {
+    return firstValueFrom(
+      this.http.patch(`${this.api}/expense/update/${id}`, payload)
+    );
+  }
+
+  deleteExpense(id: string) {
+    return firstValueFrom(this.http.delete(`${this.api}/expense/delete/${id}`));
+  }
+
 }

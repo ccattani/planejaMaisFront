@@ -1,187 +1,363 @@
-import { CommonModule } from '@angular/common';
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, ChangeDetectorRef, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { TransactionService } from '../../../core/service/transaction.service';
-import { ServicesService } from '../../../core/service/services.service';
-import { Transaction } from '../../../shared/models/interfaces/transaction';
-import { Router } from '@angular/router';
+import { CommonModule } from "@angular/common";
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  OnChanges,
+  SimpleChanges,
+  ChangeDetectorRef,
+} from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { Subscription } from "rxjs";
+import { MatPaginatorModule, PageEvent } from "@angular/material/paginator";
+import { Router } from "@angular/router";
+
+import { TransactionService } from "../../../core/service/transaction.service";
+import { ServicesService } from "../../../core/service/services.service";
+import {
+  Transaction,
+  TransactionPayload,
+} from "../../../shared/models/interfaces/transaction";
+
+type TipoTransacao = "entrada" | "saida";
 
 @Component({
-  selector: 'app-transacoes',
+  selector: "app-transacoes",
   standalone: true,
   imports: [CommonModule, FormsModule, MatPaginatorModule],
-  templateUrl: './transacoes.component.html',
-  styleUrls: ['./transacoes.component.scss']
+  templateUrl: "./transacoes.component.html",
+  styleUrls: ["./transacoes.component.scss"],
 })
 export class TransacoesComponent implements OnInit, OnDestroy, OnChanges {
   @Input() transactions: Transaction[] = [];
-  @Output() remove = new EventEmitter<number>();
-  @Output() edit = new EventEmitter<number>();
+  @Input() mostrarAcoesEPaginacao = false;
+
   @Output() add = new EventEmitter<Transaction>();
 
   mostrarNovaTransacao = false;
-  novaTransacaoDescricao = '';
-  novaTransacaoCategoria = '';
-  novaTransacaoValor = '';
-  novaTransacaoTipo: 'entrada' | 'saida' = 'saida';
-  private sub?: Subscription;
-  editarIndice: number | null = null;
 
-  @ViewChild(MatPaginator) paginator?: MatPaginator;
+  novaTransacaoDescricao = "";
+  novaTransacaoCategoria = "";
+  novaTransacaoValor = "";
+  novaTransacaoTipo: TipoTransacao = "saida";
+
+  indiceGlobalEmEdicao: number | null = null;
+
   pageSize = 10;
   pageIndex = 0;
   pagedTransactions: Transaction[] = [];
 
-  private updatePagedTransactions() {
-    const start = this.pageIndex * this.pageSize;
-    const end = start + this.pageSize;
-    this.pagedTransactions = this.transactions.slice(start, end);
-  }
+  private inscricaoModal?: Subscription;
 
-  onPageChange(event: PageEvent) {
-    this.pageIndex = event.pageIndex;
-    this.pageSize = event.pageSize;
-    this.updatePagedTransactions();
-    this.cdr.detectChanges();
-  }
-
-  constructor(private servicoTransacao: TransactionService, private services: ServicesService, private cdr: ChangeDetectorRef, private router: Router) {}
+  constructor(
+    private servicoTransacao: TransactionService,
+    private services: ServicesService,
+    private changeDetectorRef: ChangeDetectorRef,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.sub = this.servicoTransacao.open$().subscribe((payload) => {
-      this.mostrarNovaTransacao = true;
-      if (payload && typeof payload !== 'undefined') {
-        this.editarIndice = payload.index ?? null;
-        this.novaTransacaoDescricao = payload.desc || '';
-        this.novaTransacaoCategoria = payload.category ?? '';
-        const valor = payload.value ? String(Math.abs(Math.round(this.converterStringParaNumero(payload.value))) ) : '';
-        this.novaTransacaoValor = valor;
-        // determina se é entrada (positivo) ou saída (negativo)
-        this.novaTransacaoTipo = this.converterStringParaNumero(payload.value ?? '') < 0 ? 'saida' : 'entrada';
+    this.mostrarAcoesEPaginacao = this.router.url?.includes("transactions") ?? false;
+    this.inscricaoModal = this.servicoTransacao.open$().subscribe((payload) => {
+      if (payload) {
+        this.abrirModalEmEdicao(
+          payload.desc ?? "",
+          payload.value ?? "",
+          payload.category ?? "",
+          payload.index ?? null
+        );
       } else {
-        this.editarIndice = null;
-        this.novaTransacaoDescricao = '';
-        this.novaTransacaoCategoria = '';
-        this.novaTransacaoValor = '';
-        this.novaTransacaoTipo = 'saida';
+        this.abrirModalParaCriacao();
       }
     });
 
-    // Se acessado diretamente pela rota de Transações, carrega todas as transações do backend
-    if (this.router && this.router.url && this.router.url.includes('/transactions')) {
-      this.loadAllTransactions();
+    if (this.mostrarAcoesEPaginacao) {
+      this.carregarTodasAsTransacoes();
     }
 
-    // Inicializa paginação com os dados atualmente presentes
-    this.updatePagedTransactions();
+    this.atualizarTransacoesPaginadas();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['transactions']) {
-      console.log('TransacoesComponent: transactions Input mudou ->', changes['transactions'].currentValue);
-      // Forçar detecção caso o pai substitua a lista
-      this.cdr.detectChanges();
-      this.updatePagedTransactions();
-    }
-  }
-
-  private converterStringParaNumero(v: string): number {
-    if (!v) return 0;
-    let stringLimpa = v.replace(/R\$|\s/g, '');
-    stringLimpa = stringLimpa.replace(/\./g, '');
-    stringLimpa = stringLimpa.replace(/,/g, '.');
-    const numero = parseFloat(stringLimpa);
-    return isNaN(numero) ? 0 : numero;
-  }
-
-  private formatarValorComoMoeda(n: number): string {
-    const rounded = Math.round(n);
-    const sign = n < 0 ? '-' : '+';
-    return sign + 'R$ ' + new Intl.NumberFormat('pt-BR').format(Math.abs(rounded));
-  }
-
-  // Carrega todas as transações do backend e mapeia para o formato esperado pelo componente
-  private async loadAllTransactions() {
-    try {
-      const res: any = await this.services.getAllTransactions();
-      const arr = Array.isArray(res) ? res : (res?.data ?? []);
-      const mapped = (arr as any[]).map((transaction) => {
-        const valor = transaction.value ?? 0;
-        const valorFormatado = this.formatarValorComoMoeda(valor);
-        const descricao = transaction.description ?? (transaction.desc as string) ?? 'Transação';
-        return { desc: descricao, value: valorFormatado, numeric: valor } as Transaction;
-      });
-      this.transactions = mapped;
-      this.updatePagedTransactions();
-      this.cdr.detectChanges();
-    } catch (err) {
-      console.error('Erro ao buscar transações', err);
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes["transactions"]) {
+      this.atualizarTransacoesPaginadas();
+      this.changeDetectorRef.detectChanges();
     }
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
+    this.inscricaoModal?.unsubscribe();
   }
 
-  remover(i: number) { this.remove.emit(i); }
-  editar(i: number) { this.edit.emit(i); }
+  onPageChange(event: PageEvent): void {
+    this.pageIndex = event.pageIndex;
+    this.pageSize = event.pageSize;
+    this.atualizarTransacoesPaginadas();
+  }
 
-  fecharNovaTransacao() {
+  get exibirPaginacao(): boolean {
+    return this.mostrarAcoesEPaginacao;
+  }
+
+  get exibirAcoes(): boolean {
+    return this.mostrarAcoesEPaginacao
+  }
+
+  private atualizarTransacoesPaginadas(): void {
+    const inicio = this.pageIndex * this.pageSize;
+    const fim = inicio + this.pageSize;
+    this.pagedTransactions = this.transactions.slice(inicio, fim);
+  }
+
+  private obterIndiceGlobal(indiceDaPagina: number): number {
+    return this.pageIndex * this.pageSize + indiceDaPagina;
+  }
+
+  private converterStringParaNumero(valor: string): number {
+    if (!valor) return 0;
+
+    let valorLimpo = valor.replace(/R\$|\s/g, "");
+    valorLimpo = valorLimpo.replace(/\./g, "");
+    valorLimpo = valorLimpo.replace(/,/g, ".");
+
+    const numero = parseFloat(valorLimpo);
+    return isNaN(numero) ? 0 : numero;
+  }
+
+  private formatarValorComoMoeda(valor: number): string {
+    const valorArredondado = Math.round(valor);
+    const sinal = valor < 0 ? "-" : "+";
+    return (
+      sinal +
+      "R$ " +
+      new Intl.NumberFormat("pt-BR").format(Math.abs(valorArredondado))
+    );
+  }
+
+  private limparFormularioTransacao(): void {
+    this.novaTransacaoDescricao = "";
+    this.novaTransacaoCategoria = "";
+    this.novaTransacaoValor = "";
+    this.novaTransacaoTipo = "saida";
+    this.indiceGlobalEmEdicao = null;
+  }
+
+  private abrirModalParaCriacao(): void {
+    this.limparFormularioTransacao();
+    this.mostrarNovaTransacao = true;
+  }
+
+  private abrirModalEmEdicao(
+    descricao: string,
+    valor: string,
+    categoria: string,
+    indiceGlobal: number | null
+  ): void {
+    this.mostrarNovaTransacao = true;
+    this.indiceGlobalEmEdicao = indiceGlobal;
+
+    this.novaTransacaoDescricao = descricao ?? "";
+    this.novaTransacaoCategoria = categoria ?? "";
+
+    const valorNumerico = this.converterStringParaNumero(valor);
+    this.novaTransacaoTipo = valorNumerico < 0 ? "saida" : "entrada";
+    this.novaTransacaoValor = String(Math.abs(Math.round(valorNumerico)));
+  }
+
+  fecharNovaTransacao(): void {
     this.mostrarNovaTransacao = false;
-    this.novaTransacaoDescricao = '';
-    this.novaTransacaoCategoria = '';
-    this.novaTransacaoValor = '';
-    this.novaTransacaoTipo = 'saida';
-    this.editarIndice = null;
+    this.limparFormularioTransacao();
   }
 
-  async adicionarTransacao() {
-    const descricao = this.novaTransacaoDescricao.trim() || 'Transação';
-    const valorNumerico = this.converterStringParaNumero(this.novaTransacaoValor);
-    if (valorNumerico <= 0) return this.fecharNovaTransacao();
+  alterarTransacao(transacao: Transaction, indiceDaPagina: number): void {
+    const indiceGlobal = this.obterIndiceGlobal(indiceDaPagina);
+    this.abrirModalEmEdicao(
+      transacao.desc,
+      transacao.value,
+      transacao.category ?? "",
+      indiceGlobal
+    );
+  }
 
-    const signedValue = this.novaTransacaoTipo === 'saida' ? -valorNumerico : valorNumerico;
-    const valorFormatado = this.formatarValorComoMoeda(signedValue);
-
+  private montarPayloadTransacao(
+    descricao: string,
+    valorAssinado: number,
+    categoria: string
+  ): TransactionPayload {
     const agora = new Date().toISOString();
-    const category = this.novaTransacaoCategoria.trim() || descricao;
 
-    const payload = {
+    return {
       description: descricao,
-      value: signedValue,
-      category: category,
+      value: valorAssinado,
+      category: categoria,
       date: agora,
       updatedAt: agora,
     };
+  }
 
+  private montarTransacaoParaTela(
+    id: string | undefined,
+    descricao: string,
+    valorAssinado: number,
+    categoria: string
+  ): Transaction {
+    return {
+      id,
+      desc: descricao,
+      value: this.formatarValorComoMoeda(valorAssinado),
+      numeric: valorAssinado,
+      category: categoria,
+    };
+  }
+
+  private extrairIdDaResposta(resposta: any): string {
+    return String(
+      resposta?.id ??
+        resposta?._id ??
+        resposta?.transactionId ??
+        resposta?.data?.id ??
+        resposta?.data?._id ??
+        ""
+    );
+  }
+
+  private async carregarTodasAsTransacoes(): Promise<void> {
     try {
-      console.log('Criando transação:', payload);
-      await this.services.createExpense(payload);
-      console.log('Transação criada com sucesso (API)');
-    } catch (err) {
-      console.error('Erro ao criar lançamento (API):', err);
+      const resposta: any = await this.services.getAllTransactions();
+      const lista = Array.isArray(resposta) ? resposta : resposta?.data ?? [];
+
+      this.transactions = (lista as any[]).map((item) => {
+        const valor = item.value ?? 0;
+        const descricao = item.description ?? item.desc ?? "Transação";
+        const id = String(item.id ?? item._id ?? item.transactionId ?? "");
+
+        return this.montarTransacaoParaTela(
+          id,
+          descricao,
+          valor,
+          item.category
+        );
+      });
+
+      this.atualizarTransacoesPaginadas();
+      this.changeDetectorRef.detectChanges();
+    } catch (erro) {
+      console.error("Erro ao buscar transações", erro);
+    }
+  }
+
+  async adicionarTransacao(): Promise<void> {
+    const descricao = this.novaTransacaoDescricao.trim() || "Transação";
+    const categoria = this.novaTransacaoCategoria.trim() || descricao;
+
+    const valorNumerico = this.converterStringParaNumero(
+      this.novaTransacaoValor
+    );
+    if (valorNumerico <= 0) {
+      this.fecharNovaTransacao();
+      return;
     }
 
-    const evento: Transaction = { desc: descricao, value: valorFormatado, numeric: signedValue, index: this.editarIndice ?? undefined };
-    console.log('Emitindo evento adicionaTransacao ->', evento);
-    this.add.emit(evento);
+    const valorAssinado =
+      this.novaTransacaoTipo === "saida" ? -valorNumerico : valorNumerico;
+    const payload = this.montarPayloadTransacao(
+      descricao,
+      valorAssinado,
+      categoria
+    );
 
-    try {
-      if (evento.index === undefined || evento.index === null) {
-        this.transactions = [{ desc: evento.desc, value: evento.value }, ...this.transactions];
-      } else {
-        const updated = [...this.transactions];
-        updated[evento.index] = { desc: evento.desc, value: evento.value };
-        this.transactions = updated;
+    // EDIÇÃO
+    if (this.indiceGlobalEmEdicao !== null) {
+      const transacaoAtual = this.transactions[this.indiceGlobalEmEdicao];
+
+      if (!transacaoAtual?.id) {
+        console.error("Não foi possível atualizar: transação sem id.");
+        return;
       }
-      this.updatePagedTransactions();
-      this.cdr.detectChanges();
-    } catch (e) {
-      console.warn('Falha na atualização otimista local:', e);
+
+      try {
+        await this.services.updateExpense(transacaoAtual.id, payload);
+      } catch (erro) {
+        console.error("Erro ao atualizar lançamento (API):", erro);
+        return;
+      }
+
+      const transacaoAtualizada = this.montarTransacaoParaTela(
+        transacaoAtual.id,
+        descricao,
+        valorAssinado,
+        categoria
+      );
+
+      const copia = [...this.transactions];
+      copia[this.indiceGlobalEmEdicao] = transacaoAtualizada;
+      this.transactions = copia;
+
+      this.atualizarTransacoesPaginadas();
+      this.fecharNovaTransacao();
+      return;
     }
+
+    // CRIAÇÃO
+    let respostaCriacao: any;
+
+    try {
+      respostaCriacao = await this.services.createExpense(payload);
+    } catch (erro) {
+      console.error("Erro ao criar lançamento (API):", erro);
+      return;
+    }
+
+    const idCriado = this.extrairIdDaResposta(respostaCriacao);
+
+    if (!idCriado) {
+      console.warn(
+        "A API criou a transação, mas não retornou id. Editar e excluir podem falhar até recarregar."
+      );
+    }
+
+    const transacaoNova = this.montarTransacaoParaTela(
+      idCriado || undefined,
+      descricao,
+      valorAssinado,
+      categoria
+    );
+
+    this.add.emit(transacaoNova);
+
+    this.transactions = [transacaoNova, ...this.transactions];
+    this.atualizarTransacoesPaginadas();
 
     this.fecharNovaTransacao();
+  }
+
+  async deletarTransacao(
+    transacao: Transaction,
+    indiceDaPagina: number
+  ): Promise<void> {
+    if (!transacao.id) {
+      console.error("Sem id: não dá para excluir com segurança.");
+      return;
+    }
+
+    const indiceGlobal = this.obterIndiceGlobal(indiceDaPagina);
+
+    const backup = [...this.transactions];
+
+    this.transactions = this.transactions.filter(
+      (_, index) => index !== indiceGlobal
+    );
+    this.atualizarTransacoesPaginadas();
+
+    try {
+      await this.services.deleteExpense(transacao.id);
+    } catch (erro) {
+      console.error("Erro ao excluir (API):", erro);
+      this.transactions = backup;
+      this.atualizarTransacoesPaginadas();
+    }
   }
 }
