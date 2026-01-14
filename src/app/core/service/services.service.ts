@@ -70,7 +70,7 @@ export class ServicesService {
   }
 
   getAllTransactions() {
-    return firstValueFrom(this.http.get(`${this.api}/expense/myExpenseAll`));
+    return firstValueFrom(this.http.get(`${this.api}/expense/myExpenseByFilter`));
   }
 
   createExpense(payload: TransactionPayload) {
