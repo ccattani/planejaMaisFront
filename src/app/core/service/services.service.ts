@@ -193,4 +193,10 @@ export class ServicesService {
 
     return firstValueFrom(this.http.post(`${this.api}/goal/create`, payload, { headers }));
   }
+
+  getMyGoals(year: number, month: number) {
+    return firstValueFrom(
+      this.http.get(`${this.api}/goal/myGoal/${year}/${month}`)
+    );
+  }
 }
