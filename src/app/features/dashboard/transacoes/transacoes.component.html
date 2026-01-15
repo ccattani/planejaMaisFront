@@ -1,70 +1,66 @@
-<section class="card table-card">
-  <div class="table-head">
-    <h3>Últimas Transações</h3>
-    <span>Transações</span>
-  </div>
+<section class="transactions-page">
+  <div class="page-head">
+    <div>
+      <h2>Transações</h2>
+      <p class="muted">{{ totalLabel }}</p>
+    </div>
 
-  <div class="table-info">
-    Total transações: {{ transactions.length }}
-  </div>
-
-  <div class="table">
-    <div class="row" *ngFor="let transacao of pagedTransactions; let i = index">
-      <div class="desc">{{ transacao.desc }}</div>
-      <div class="val">{{ transacao.value }}</div>
-
-      <div class="actions" *ngIf="exibirAcoes">
-        <button class="btn tiny ghost" (click)="alterarTransacao(transacao, i)">
-          Editar
-        </button>
-        <button class="btn tiny danger" (click)="deletarTransacao(transacao, i)">
-          Excluir
-        </button>
-      </div>
+    <div class="head-right">
+      <div class="sum">{{ totalValor }}</div>
     </div>
   </div>
 
-  <mat-paginator
-    *ngIf="exibirPaginacao"
-    [length]="transactions.length"
-    [pageSize]="pageSize"
-    [pageSizeOptions]="[10]"
-    [pageIndex]="pageIndex"
-    showFirstLastButtons
-    (page)="onPageChange($event)"
-  >
-  </mat-paginator>
+  <article class="card card--list">
+    <header class="card__head">
+      <div>
+        <div class="card__title">Todas as Transações</div>
+        <div class="card__sub">{{ totalLabel }}</div>
+      </div>
+
+      <div class="card__right">
+        <div class="card__sum">{{ totalValor }}</div>
+        <div class="card__chev">▾</div>
+      </div>
+    </header>
+
+    <div class="list" *ngIf="!carregando; else loading">
+      <ng-container *ngFor="let tx of txs; trackBy: trackById; let i = index">
+        <div class="list__group" *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel">
+          <span>{{ tx.groupLabel }}</span>
+        </div>
+
+        <div class="row">
+          <div class="row__left">
+            <div class="row__ico">{{ tx.icon }}</div>
+
+            <div class="row__text">
+              <div class="row__title">
+                {{ tx.desc }}
+                <span class="tag tag--gray" *ngIf="tx.tags?.[0]">{{ tx.tags[0] }}</span>
+              </div>
+
+              <div class="row__tags" *ngIf="(tx.tags?.length ?? 0) > 1">
+                <span class="tag tag--orange" *ngFor="let t of tx.tags.slice(1)">{{ t }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="row__right">
+            <div class="row__value" [class.pos]="(tx.numeric ?? 0) > 0" [class.neg]="(tx.numeric ?? 0) < 0">
+              {{ tx.value }}
+            </div>
+
+            <div class="row__actions">
+              <button class="btn tiny ghost" (click)="editar(tx)">Editar</button>
+              <button class="btn tiny danger" (click)="excluir(tx)">Excluir</button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <ng-template #loading>
+      <div class="loading">Carregando...</div>
+    </ng-template>
+  </article>
 </section>
-
-<div class="modal-overlay" *ngIf="mostrarNovaTransacao">
-  <div class="modal">
-    <h3>Nova Transação</h3>
-
-    <label>Descrição</label>
-    <input [(ngModel)]="novaTransacaoDescricao" placeholder="Ex: Padaria" />
-
-    <label>Categoria</label>
-    <input [(ngModel)]="novaTransacaoCategoria" placeholder="Ex: Alimentação" />
-
-    <div class="field-inline">
-      <label>Valor</label>
-      <div class="field-inline-content">
-        <input
-          [(ngModel)]="novaTransacaoValor"
-          placeholder="Ex: 230 ou 230.50"
-          class="value-input"
-        />
-
-        <select [(ngModel)]="novaTransacaoTipo" class="type-select">
-          <option value="entrada">Entrada (+)</option>
-          <option value="saida">Saída (-)</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn ghost" (click)="fecharNovaTransacao()">Cancelar</button>
-      <button class="btn primary" (click)="adicionarTransacao()">Salvar</button>
-    </div>
-  </div>
-</div>
