@@ -1,0 +1,235 @@
+<section class="content">
+    <div class="page-head">
+    <div>
+      <h2>Metas</h2>
+      <p>Crie metas mensais ou anuais (month 0 = anual).</p>
+    </div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="kpis">
+    <div class="kpi">
+      <div class="kpi__icon">🎯</div>
+      <div class="kpi__txt">
+        <div class="kpi__label">Metas criadas</div>
+        <div class="kpi__value">{{ totalMetas }}</div>
+        <div class="kpi__sub">Inclui mensal e anual</div>
+      </div>
+      <div class="kpi__chev">›</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__icon">🗓️</div>
+      <div class="kpi__txt">
+        <div class="kpi__label">Metas anuais</div>
+        <div class="kpi__value">{{ metasAnuais }}</div>
+        <div class="kpi__sub">month = 0</div>
+      </div>
+      <div class="kpi__chev">›</div>
+    </div>
+
+    <div class="kpi">
+      <div class="kpi__icon">📆</div>
+      <div class="kpi__txt">
+        <div class="kpi__label">Metas mensais</div>
+        <div class="kpi__value">{{ metasMensais }}</div>
+        <div class="kpi__sub">1..12</div>
+      </div>
+      <div class="kpi__chev">›</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+    <!-- Left: goals list -->
+    <div class="panel panel--list">
+      <div class="panel__head">
+        <h2>Minhas Metas</h2>
+        <button class="panel__action" type="button">Ordenar ▾</button>
+      </div>
+
+      <div class="list" *ngIf="goals.length; else empty">
+        <div class="row" *ngFor="let g of goals">
+          <div class="row__left">
+            <div class="avatar">🎯</div>
+
+            <div class="info">
+              <div class="title">
+                <span class="name">{{ getGoalTitle(g) }}</span>
+                <span class="badge">{{ g.month === 0 ? 'Anual' : 'Mensal' }}</span>
+              </div>
+
+              <div class="chips">
+                <span class="chip chip--neutral">Ano: {{ g.year }}</span>
+                <span class="chip chip--soft">Mês: {{ g.month }}</span>
+              </div>
+
+              <div class="progress">
+                <div class="progress__meta">
+                  <span>Goal: <strong>{{ g.goal }}</strong></span>
+                  <span class="muted">{{ g.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row__right">
+            <div class="amount">
+              <div class="amount__main">
+                Valor: <strong>{{ g.goal }}</strong>
+              </div>
+              <div class="amount__sub">
+                Atualizado em {{ g.updatedAt | date:'dd/MM/yyyy' }}
+              </div>
+            </div>
+
+            <div class="row__btns">
+              <button class="btn btn-ghost" type="button" disabled>Editar</button>
+              <button class="btn btn-ghost" type="button" disabled>Excluir</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #empty>
+        <div class="empty">
+          <h3>Nenhuma meta encontrada</h3>
+          <p>Crie uma meta mensal ou anual.</p>
+          <button class="btn btn-primary" type="button" (click)="abrirCriarMeta()">+ Nova meta</button>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Right: insights -->
+    <aside class="panel panel--side">
+      <div class="insight">
+        <div class="insight__head">
+          <h3>Insight</h3>
+          <span class="chev">›</span>
+        </div>
+
+        <div class="insight__body">
+          <div class="miniicon">📊</div>
+          <div class="text">
+            <div class="strong">Organize por período</div>
+            <div class="muted">
+              Para metas anuais, use month = 0. Para mensais, use 1..12 (sem 01, 02).
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-soft" type="button" (click)="abrirCriarMeta()">Criar meta</button>
+      </div>
+
+      <div class="insight">
+        <div class="insight__head">
+          <h3>Dica</h3>
+        </div>
+
+        <div class="insight__body">
+          <div class="miniicon">🎯</div>
+          <div class="text">
+            <div class="strong">Meta pode ser negativa</div>
+            <div class="muted">Não envie “+”. Para positivo, envie apenas 1.50.</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Floating action button -->
+  <button class="fab" type="button" (click)="abrirCriarMeta()" aria-label="Adicionar meta">+</button>
+</section>
+
+<!-- MODAL: Criar Meta -->
+<div class="modal-backdrop" *ngIf="isCreateOpen" (click)="fecharCriarMeta()"></div>
+
+<div class="modal" *ngIf="isCreateOpen" role="dialog" aria-modal="true">
+  <div class="modal__header">
+    <h3>Criar uma nova meta</h3>
+    <button class="iconbtn" type="button" (click)="fecharCriarMeta()">✕</button>
+  </div>
+
+  <div class="modal__body">
+    <!-- Título -->
+    <div class="rowform">
+      <label>Título</label>
+      <input
+        type="text"
+        [(ngModel)]="form.title"
+        [class.is-invalid]="isInvalidTitle()"
+        placeholder="Ex: Reserva, Viagem, Meta do ano..."
+      />
+      <small class="hint">Obrigatório. (Por enquanto fica salvo no app, não no backend.)</small>
+    </div>
+
+    <!-- Tipo -->
+    <div class="rowform">
+      <label>Tipo</label>
+      <div class="segmented">
+        <button
+          type="button"
+          class="segmented__btn"
+          [class.is-active]="form.tipo === 'mensal'"
+          (click)="onTipoChange('mensal')"
+        >
+          Mensal
+        </button>
+        <button
+          type="button"
+          class="segmented__btn"
+          [class.is-active]="form.tipo === 'anual'"
+          (click)="onTipoChange('anual')"
+        >
+          Anual
+        </button>
+      </div>
+      <small class="hint">Anual = month 0. Mensal = 1..12 (sem 01, 02).</small>
+    </div>
+
+    <div class="rowgrid">
+      <div class="rowform">
+        <label>Ano</label>
+        <input type="number" [(ngModel)]="form.year" />
+      </div>
+
+      <div class="rowform" *ngIf="form.tipo === 'mensal'">
+        <label>Mês</label>
+        <select [(ngModel)]="form.month">
+          <option [ngValue]="1">1</option><option [ngValue]="2">2</option><option [ngValue]="3">3</option>
+          <option [ngValue]="4">4</option><option [ngValue]="5">5</option><option [ngValue]="6">6</option>
+          <option [ngValue]="7">7</option><option [ngValue]="8">8</option><option [ngValue]="9">9</option>
+          <option [ngValue]="10">10</option><option [ngValue]="11">11</option><option [ngValue]="12">12</option>
+        </select>
+      </div>
+
+      <div class="rowform" *ngIf="form.tipo === 'anual'">
+        <label>Mês</label>
+        <input type="number" [ngModel]="0" disabled />
+      </div>
+    </div>
+
+    <div class="rowform">
+      <label>Meta (goal)</label>
+      <input
+        type="number"
+        step="0.01"
+        [(ngModel)]="form.goal"
+        [class.is-invalid]="isInvalidGoal()"
+        placeholder="Ex: 4000 ou -500"
+      />
+      <small class="hint">Pode ser negativo. Não use sinal de “+”.</small>
+    </div>
+
+    <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  </div>
+
+  <div class="modal__footer">
+    <button class="btn btn-ghost" type="button" (click)="fecharCriarMeta()" [disabled]="saving">
+      Cancelar
+    </button>
+    <button class="btn btn-primary" type="button" (click)="submitCriarMeta()" [disabled]="saving">
+      {{ saving ? 'Salvando...' : 'Salvar meta' }}
+    </button>
+  </div>
+</div>

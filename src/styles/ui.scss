@@ -173,6 +173,7 @@
   width: 100%;
   background: transparent;
   font-size: 15px;
+  color: #111 !important;
 }
 .ui-icon-pill {
   width: 52px;
@@ -194,4 +195,34 @@
 }
 .ui-btn--primary:hover {
   filter: brightness(0.96);
+}
+
+.ui-searchbar--advanced {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-searchbar__select {
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  padding: 6px 8px;
+}
+
+.ui-searchbar__btn {
+  border: none;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.ui-searchbar__btn--ghost {
+  background: transparent;
+  opacity: 0.9;
+}
+
+.ui-searchbar__input--sm {
+  max-width: 110px;
 }

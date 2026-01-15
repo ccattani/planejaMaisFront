@@ -1,0 +1,54 @@
+<div class="modal-overlay" *ngIf="isOpen">
+  <div class="modal">
+    <div class="modal__head">
+      <h3>{{ isEditMode ? "Editar Transação" : "Nova Transação" }}</h3>
+      <button class="icon-x" type="button" (click)="close()" aria-label="Fechar">✕</button>
+    </div>
+
+    <div class="field">
+      <label>Descrição</label>
+      <input
+        [(ngModel)]="form.desc"
+        placeholder="Ex: Padaria"
+        [class.is-invalid]="isInvalidDesc"
+      />
+      <small class="error" *ngIf="isInvalidDesc">Informe uma descrição válida.</small>
+    </div>
+
+    <div class="field">
+      <label>Categoria</label>
+      <input [(ngModel)]="form.category" placeholder="Ex: Alimentação" />
+    </div>
+
+    <div class="field">
+      <label>Valor</label>
+
+      <div class="field-inline-content">
+        <input
+          [(ngModel)]="form.value"
+          placeholder="Ex: 230 ou 230,50"
+          class="value-input"
+          inputmode="decimal"
+          [class.is-invalid]="isInvalidValue"
+        />
+
+        <select [(ngModel)]="form.type" class="type-select">
+          <option value="entrada">Entrada (+)</option>
+          <option value="saida">Saída (-)</option>
+        </select>
+      </div>
+
+      <small class="error" *ngIf="isInvalidValue">Informe um valor válido (maior que 0).</small>
+    </div>
+
+    <div class="modal-actions">
+      <button class="ui-btn ui-btn--ghost" type="button" (click)="close()" [disabled]="saving">
+        Cancelar
+      </button>
+
+      <button class="ui-btn ui-btn--primary" type="button" (click)="submit()" [disabled]="saving || isInvalidDesc || isInvalidValue">
+        {{ saving ? "Salvando..." : "Salvar" }}
+      </button>
+    </div>
+  </div>
+</div>

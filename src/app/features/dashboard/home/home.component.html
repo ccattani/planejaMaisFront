@@ -1,33 +1,49 @@
 <section class="home">
-  <!-- Top controls -->
-  <!-- <div class="home__top">
-    <div class="searchbar">
-      <span class="searchbar__icon">🔎</span>
-      <input class="searchbar__input" placeholder="Buscar..." />
-    </div>
-
-    <button class="icon-pill" title="Atalhos">⚪</button>
-    <button class="icon-pill" title="Notificações">🔴</button>
-  </div> -->
-
   <!-- Filters row -->
   <div class="filters">
-    <button class="pill pill--soft">
+    <!-- Mês: por enquanto só reseta tudo (igual seu botão) -->
+    <button class="pill pill--soft" type="button" (click)="limparTodosFiltros()">
       <span class="pill__icon">📅</span>
       {{ mesLabel }}
       <span class="pill__chev">▾</span>
     </button>
 
-    <button class="pill">
-      Categoria: {{ filtroCategoria }} <span class="pill__x">×</span>
+    <!-- Categoria (multi) - clique alterna uma categoria demo -->
+    <button
+      class="pill"
+      type="button"
+      (click)="toggleCategoria('Alimentação')"
+      [class.pill--active]="categoriaAtiva('Alimentação')"
+    >
+      Categoria: {{ filtroCategoriaLabel }}
+      <span class="pill__x" (click)="limparFiltroCategoria(); $event.stopPropagation()">×</span>
     </button>
-    <button class="pill">
-      Tipo: {{ filtroTipo }} <span class="pill__x">×</span>
+
+    <!-- Tipo (multi) - clique alterna Entrada demo -->
+    <button
+      class="pill"
+      type="button"
+      (click)="toggleTipo('entrada')"
+      [class.pill--active]="tipoAtivo('entrada')"
+    >
+      Tipo: {{ filtroTipoLabel }}
+      <span class="pill__x" (click)="limparFiltroTipo(); $event.stopPropagation()">×</span>
     </button>
-    <button class="pill">
-      Valor: {{ filtroValor }} <span class="pill__x">×</span>
+
+    <!-- Valor (multi ranges) - clique alterna range 100-500 demo -->
+    <button
+      class="pill"
+      type="button"
+      (click)="toggleValor(100, 500)"
+      [class.pill--active]="valorAtivo(100, 500)"
+    >
+      Valor: {{ filtroValorLabel }}
+      <span class="pill__x" (click)="limparFiltroValor(); $event.stopPropagation()">×</span>
     </button>
-    <button class="pill">Custom <span class="pill__chev">▾</span></button>
+
+    <button class="pill" type="button" (click)="limparTodosFiltros()">
+      Limpar <span class="pill__chev">↺</span>
+    </button>
   </div>
 
   <!-- KPI cards -->
@@ -37,12 +53,11 @@
       <div class="kpi-card__row">
         <div class="kpi-card__left">
           <div class="kpi-ico kpi-ico--blue">💳</div>
+
           <div class="kpi-card__text">
             <div class="kpi-label">Saldo total</div>
 
-            <ng-container
-              *ngIf="(visibility.showBalances$ | async); else hiddenSaldo"
-            >
+            <ng-container *ngIf="(visibility.showBalances$ | async); else hiddenSaldo">
               <div class="kpi-value">{{ saldoTotal }}</div>
             </ng-container>
 
@@ -56,62 +71,37 @@
       </div>
 
       <div class="kpi-bar">
-        <div
-          class="kpi-bar__fill"
-          [style.width.%]="clampPercent(metaProgress)"
-        ></div>
+        <div class="kpi-bar__fill" [style.width.%]="clampPercent(metaProgress)"></div>
       </div>
     </article>
 
-    <!-- Meta -->
-    <article class="kpi-card">
+    <!-- Metas criadas (substitui "Meta de guardar") -->
+    <article class="kpi-card kpi-card--clickable" (click)="irParaMetas()" role="button" tabindex="0">
       <div class="kpi-card__row">
         <div class="kpi-card__left">
           <div class="kpi-ico kpi-ico--pink">🎯</div>
 
           <div class="kpi-card__text">
-            <div class="kpi-label">Meta de guardar</div>
+            <div class="kpi-label">Metas criadas</div>
 
-            <!-- edição -->
-            <div *ngIf="editing.metaMensal; else metaView" class="kpi-edit">
-              <input [(ngModel)]="editValues.metaMensal" class="kpi-input" />
-              <button class="kpi-btn" (click)="salvarEdicao('metaMensal')">
-                Salvar
-              </button>
-              <button
-                class="kpi-btn ghost"
-                (click)="cancelarEdicao('metaMensal')"
-              >
-                Cancelar
-              </button>
-            </div>
-
-            <ng-template #metaView>
-              <button class="kpi-button" (click)="iniciarEdicao('metaMensal')">
-                <ng-container
-                  *ngIf="(visibility.showBalances$ | async); else hiddenMeta"
-                >
-                  <span class="kpi-value">{{ metaMensal }}</span>
-                </ng-container>
-                <ng-template #hiddenMeta>
-                  <span class="kpi-value">••••</span>
-                </ng-template>
-              </button>
-            </ng-template>
+            <button class="kpi-button" type="button" (click)="irParaMetas(); $event.stopPropagation()">
+              <span class="kpi-value">{{ metasCriadas }}</span>
+            </button>
           </div>
         </div>
 
         <div class="kpi-card__chev">›</div>
       </div>
 
+      <!-- barra opcional -->
       <div class="kpi-bar">
-        <div class="kpi-bar__fill" [style.width.%]="metaProgress"></div>
+        <div class="kpi-bar__fill" [style.width.%]="clampPercent(metasBarPercent)"></div>
       </div>
 
-      <div class="kpi-foot">
-        <span class="kpi-foot__muted">Falta</span>
-        <span class="kpi-foot__val">{{ metaRestante }}</span>
-      </div>
+      <!-- <div class="kpi-foot">
+        <span class="kpi-foot__muted">Total</span>
+        <span class="kpi-foot__val">{{ metasCriadas }}</span>
+      </div> -->
     </article>
 
     <!-- Gasto no mês -->
@@ -123,9 +113,7 @@
           <div class="kpi-card__text">
             <div class="kpi-label">Gasto no mês</div>
 
-            <ng-container
-              *ngIf="(visibility.showBalances$ | async); else hiddenGasto"
-            >
+            <ng-container *ngIf="(visibility.showBalances$ | async); else hiddenGasto">
               <div class="kpi-value kpi-value--neg">{{ gastoNoMes }}</div>
               <div class="kpi-sub">
                 <span class="kpi-sub__up">▲ 9%</span>
@@ -146,7 +134,6 @@
 
   <!-- Main grid -->
   <div class="grid">
-    <!-- Transactions list card -->
     <article class="ui-card ui-card--list">
       <header class="ui-card__head">
         <div>
@@ -162,10 +149,7 @@
 
       <div class="ui-list">
         <ng-container *ngFor="let tx of txs; trackBy: trackById; let i = index">
-          <div
-            class="ui-list__group"
-            *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel"
-          >
+          <div class="ui-list__group" *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel">
             <span>{{ tx.groupLabel }}</span>
           </div>
 
@@ -176,18 +160,11 @@
               <div class="ui-row__text">
                 <div class="ui-row__title">
                   {{ tx.desc }}
-                  <span class="ui-tag ui-tag--gray" *ngIf="tx.tags?.[0]">
-                    {{ tx.tags[0] }}
-                  </span>
+                  <span class="ui-tag ui-tag--gray" *ngIf="tx.tags?.[0]">{{ tx.tags[0] }}</span>
                 </div>
 
                 <div class="ui-row__tags" *ngIf="(tx.tags?.length ?? 0) > 1">
-                  <span
-                    class="ui-tag ui-tag--orange"
-                    *ngFor="let t of tx.tags.slice(1)"
-                  >
-                    {{ t }}
-                  </span>
+                  <span class="ui-tag ui-tag--orange" *ngFor="let t of tx.tags.slice(1)">{{ t }}</span>
                 </div>
               </div>
             </div>
@@ -203,124 +180,11 @@
         </ng-container>
       </div>
     </article>
-
-    <!-- Insights column -->
-    <!-- <aside class="insights">
-      <article class="card insight">
-        <header class="card__head card__head--tight">
-          <div class="card__title">Insight</div>
-          <div class="card__chev">›</div>
-        </header>
-
-        <div class="insight__body">
-          <div class="insight__ico">📊</div>
-          <div class="insight__text">
-            <div>Você gastou mais com</div>
-            <div class="insight__strong">{{ insightTopCategoria }}</div>
-            <div class="insight__muted">({{ insightTopDelta }})</div>
-          </div>
-
-          <button class="soft-btn">Ver categorias</button>
-        </div>
-      </article>
-
-      <article class="card insight">
-        <header class="card__head card__head--tight">
-          <div class="card__title">Insight</div>
-        </header>
-
-        <div class="mini">
-          <div class="mini__left">
-            <div class="mini__ico">🧠</div>
-            <div class="mini__text">
-              <div class="mini__muted">Maior gasto</div>
-              <div class="mini__strong">Mercado</div>
-            </div>
-          </div>
-
-          <div class="mini__right">
-            <div class="mini__val">-R$ 250</div>
-            <div class="mini__bar"><span></span></div>
-          </div>
-        </div>
-
-        <div class="goal">
-          <div class="goal__ico">🎯</div>
-          <div class="goal__text">
-            <div class="goal__strong">Resta {{ metaRestante }}</div>
-            <div class="goal__muted">para bater a meta</div>
-          </div>
-        </div>
-      </article>
-    </aside> -->
   </div>
 
   <!-- Floating add button -->
-  <!-- Floating add button -->
-  <button
-    class="fab"
-    (click)="abrirNovaTransacao()"
-    aria-label="Nova transação"
-  >
-    +
-  </button>
+  <button class="fab" type="button" (click)="abrirNovaTransacao()" aria-label="Nova transação">+</button>
 
-  <!-- MODAL NOVA TRANSAÇÃO (fica no Home) -->
-  <div class="modal-overlay" *ngIf="modalNovaTransacao">
-    <div class="modal">
-      <div class="modal__head">
-        <h3>{{ modoEdicao ? "Editar Transação" : "Nova Transação" }}</h3>
-        <button
-          class="icon-x"
-          (click)="fecharModalNovaTransacao()"
-          aria-label="Fechar"
-        >
-          ✕
-        </button>
-      </div>
-
-      <label>Descrição</label>
-      <input [(ngModel)]="form.desc" placeholder="Ex: Padaria" />
-
-      <label>Categoria</label>
-      <input [(ngModel)]="form.category" placeholder="Ex: Alimentação" />
-
-      <div class="field-inline">
-        <label>Valor</label>
-        <div class="field-inline-content">
-          <input
-            [(ngModel)]="form.value"
-            placeholder="Ex: 230 ou 230,50"
-            class="value-input"
-            inputmode="decimal"
-          />
-
-          <select [(ngModel)]="form.type" class="type-select">
-            <option value="entrada">Entrada (+)</option>
-            <option value="saida">Saída (-)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button
-          class="ui-btn ui-btn--ghost"
-          (click)="fecharModalNovaTransacao()"
-        >
-          Cancelar
-        </button>
-
-        <button
-          class="ui-btn ui-btn--primary"
-          (click)="salvarTransacao()"
-          [disabled]="salvando"
-        >
-          {{ salvando ? "Salvando..." : "Salvar" }}
-        </button>
-      </div>
-    </div>
-  </div>
-  <!-- quando o modal criar/editar, você chama receberTransacaoFilha() pelo evento do seu componente transações
-  Se seu modal está fora da Home (topbar), então você faz via serviço + recarrega ao salvar.
-  -->
+  <!-- Modal compartilhado (shared) -->
+  <app-tx-modal #txModal (saved)="onTxSaved($event)"></app-tx-modal>
 </section>

@@ -54,6 +54,13 @@ export const routes: Routes = [
             (m) => m.ProfileComponent
           ),
       },
+      {
+        path: "goals",
+        loadComponent: () =>
+          import("./features/dashboard/metas/metas.component").then(
+            (m) => m.MetasComponent
+          ),
+      },
       { path: "", pathMatch: "full", redirectTo: "home" },
     ],
   },

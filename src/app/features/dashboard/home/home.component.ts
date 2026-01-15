@@ -1,137 +1,450 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, OnDestroy, ViewChild } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
+
+import { Subject, filter, takeUntil } from "rxjs";
 
 import { VisibilityService } from "../../../core/service/visibility.service";
 import { ServicesService } from "../../../core/service/services.service";
 import {
-  Transaction,
-  TransactionPayload,
-} from "../../../shared/models/interfaces/transaction";
-import { TransactionService } from "../../../core/service/transaction.service";
-import { TransacoesComponent } from "../transacoes/transacoes.component";
+  FiltersService,
+  FilterPatch,
+} from "../../../core/service/filters.service";
 
-type ChaveKpi = "saldoTotal" | "metaMensal";
+import { Transaction } from "../../../shared/models/interfaces/transaction";
+import { Router } from "@angular/router";
 
-type KpiConfig = {
-  chave: ChaveKpi;
-  titulo: string;
-  icone: string;
-  editavel: boolean;
-};
+// IMPORT DO SEU MODAL (você vai criar no shared)
+// ajuste o caminho conforme a pasta que você escolher no shared
+import {
+  TxModalComponent,
+  TxModalValue,
+} from "../../../shared/components/tx-modal/tx-modal.component";
 
 type UiTx = Transaction & {
   groupLabel: string;
   tags: string[];
   icon: string;
+  dateISO?: string;
+};
+
+type TipoTx = "entrada" | "saida";
+type RangeValor = { min?: number; max?: number };
+
+// evento emitido pelo <app-tx-modal (saved)="onTxSaved($event)">
+type TxSavedEvent = {
+  mode: "create" | "edit";
+  tx: Transaction; // precisa ter pelo menos: id?, desc, category?, numeric, value
+  dateISO?: string;
 };
 
 @Component({
   selector: "app-home",
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TxModalComponent],
   templateUrl: "./home.component.html",
   styleUrls: ["./home.component.scss"],
 })
-export class HomeComponent implements OnInit {
-  // filtros UI (só visual por enquanto)
-  mesLabel = "Janeiro";
-  filtroCategoria = "Todas";
-  filtroTipo = "Todos";
-  filtroValor = "--";
-  filtroCustom = "Custom";
+export class HomeComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
-  // KPIs
+  @ViewChild(TxModalComponent) txModal!: TxModalComponent;
+
+  // ====== FILTROS (labels) ======
+  mesLabel = "Janeiro";
+
+  get filtroCategoriaLabel(): string {
+    return this.filtroCategorias.length
+      ? this.filtroCategorias.join(", ")
+      : "Todas";
+  }
+
+  get filtroTipoLabel(): string {
+    if (!this.filtroTipos.length) return "Todos";
+    const labels = this.filtroTipos.map((t) =>
+      t === "entrada" ? "Entrada" : "Saída"
+    );
+    return labels.join(", ");
+  }
+
+  get filtroValorLabel(): string {
+    if (!this.filtroValores.length) return "--";
+    return this.filtroValores
+      .map((r) => {
+        if (r.min == null && r.max != null) return `Até ${r.max}`;
+        if (r.min != null && r.max == null) return `${r.min}+`;
+        if (r.min != null && r.max != null) return `${r.min}-${r.max}`;
+        return "--";
+      })
+      .join(", ");
+  }
+
+  // ====== FILTROS (estado real multi) ======
+  private filtroMes: { start: Date; end: Date } | null = null;
+
+  filtroCategorias: string[] = [];
+  filtroTipos: TipoTx[] = [];
+  filtroValores: RangeValor[] = [];
+
+  // ====== KPIs ======
   saldoTotal = "R$ 0";
-  metaMensal = "R$ 0";
   gastoNoMes = "R$ 0";
 
-  kpis: KpiConfig[] = [
-    {
-      chave: "saldoTotal",
-      titulo: "Saldo total",
-      icone: "💳",
-      editavel: false,
-    },
-    {
-      chave: "metaMensal",
-      titulo: "Meta de guardar",
-      icone: "🎯",
-      editavel: true,
-    },
-  ];
-
-  editing: Record<ChaveKpi, boolean> = {
-    saldoTotal: false,
-    metaMensal: false,
-  };
-
-  editValues: Record<ChaveKpi, string> = {
-    saldoTotal: this.saldoTotal,
-    metaMensal: this.metaMensal,
-  };
-
-  private readonly chaveStorageMetaMensal = "planejaMais_metaMensal";
-
-  // lista rica da Home (agrupada)
+  // ====== LISTA ======
+  txsAll: UiTx[] = [];
   txs: UiTx[] = [];
 
-  // cabeçalho da lista
   totalUltimasLabel = "Total transações: 0";
   totalUltimasValor = "+R$ 0";
 
-  // meta/progresso
-  metaProgress = 0; // 0-100
-  metaRestante = "R$ 0";
+  // ====== META (barra do saldo) ======
+  metaProgress = 0;
 
-  // insights (placeholder por enquanto)
-  insightTopCategoria = "Alimentação";
-  insightTopDelta = "+18%";
-
-  modalNovaTransacao = false;
-  salvando = false;
-
-  modoEdicao = false;
-  idEmEdicao: string | null = null;
-
-  form: {
-    desc: string;
-    category: string;
-    value: string;
-    type: "entrada" | "saida";
-  } = {
-    desc: "",
-    category: "",
-    value: "",
-    type: "saida",
-  };
+  // ====== METAS CRIADAS ======
+  GOALS_KEY = "planeja_goals_v1";
+  metasCriadas = 0;
 
   constructor(
     public visibility: VisibilityService,
     private services: ServicesService,
-    private txModal: TransactionService
+    private filtersService: FiltersService,
+    private router: Router
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.carregarMetaMensalDoStorage();
+    this.filtersService.patch$
+      .pipe(
+        takeUntil(this.destroy$),
+        filter((p): p is FilterPatch => p !== null)
+      )
+      .subscribe((patch) => this.aplicarPatch(patch));
 
-    await Promise.all([
-      this.carregarSaldoTotal(),
-      this.carregarUltimasTransacoes(),
-    ]);
+    this.definirFiltroMesAtual();
 
+    await Promise.all([this.carregarSaldoTotal(), this.carregarTransacoes()]);
+
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+    this.carregarMetasCriadas();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // =========================
+  // PATCHES VINDOS DO DASHBOARD
+  // =========================
+  private aplicarPatch(patch: FilterPatch): void {
+    switch (patch.kind) {
+      case "categoria":
+        this.patchCategoria(patch.value, patch.mode ?? "toggle");
+        break;
+
+      case "tipo":
+        this.patchTipo(patch.value, patch.mode ?? "toggle");
+        break;
+
+      case "valor":
+        this.patchValor(patch.value, patch.mode ?? "toggle");
+        break;
+
+      case "mesAtual":
+        this.definirFiltroMesAtual();
+        break;
+
+      case "limparTudo":
+        this.limparTodosFiltros();
+        return;
+    }
+
+    this.aplicarFiltros();
     this.recalcularDashLocal();
   }
 
-  abrirNovaTransacao(): void {
-    this.modoEdicao = false;
-    this.idEmEdicao = null;
-    this.form = { desc: "", category: "", value: "", type: "saida" };
-    this.modalNovaTransacao = true;
+  private patchCategoria(
+    value: string,
+    mode: "toggle" | "set" | "clear"
+  ): void {
+    const cat = value.trim();
+    if (!cat) return;
+
+    if (mode === "clear") {
+      this.filtroCategorias = [];
+      return;
+    }
+    if (mode === "set") {
+      this.filtroCategorias = [cat];
+      return;
+    }
+
+    const idx = this.filtroCategorias.findIndex(
+      (c) => c.toLowerCase() === cat.toLowerCase()
+    );
+    if (idx >= 0) this.filtroCategorias.splice(idx, 1);
+    else this.filtroCategorias.push(cat);
   }
 
-  fecharModalNovaTransacao(): void {
-    this.modalNovaTransacao = false;
+  private patchTipo(value: TipoTx, mode: "toggle" | "set" | "clear"): void {
+    if (mode === "clear") {
+      this.filtroTipos = [];
+      return;
+    }
+    if (mode === "set") {
+      this.filtroTipos = [value];
+      return;
+    }
+
+    const idx = this.filtroTipos.indexOf(value);
+    if (idx >= 0) this.filtroTipos.splice(idx, 1);
+    else this.filtroTipos.push(value);
+  }
+
+  private patchValor(
+    value: RangeValor,
+    mode: "toggle" | "set" | "clear"
+  ): void {
+    const min = value.min;
+    const max = value.max;
+
+    if (mode === "clear") {
+      this.filtroValores = [];
+      return;
+    }
+    if (mode === "set") {
+      this.filtroValores = [{ min, max }];
+      return;
+    }
+
+    const idx = this.filtroValores.findIndex(
+      (r) => r.min === min && r.max === max
+    );
+    if (idx >= 0) this.filtroValores.splice(idx, 1);
+    else this.filtroValores.push({ min, max });
+  }
+
+  // =========================
+  // FILTROS (UI local)
+  // =========================
+  categoriaAtiva(cat: string): boolean {
+    return this.filtroCategorias.includes(cat);
+  }
+
+  toggleCategoria(cat: string): void {
+    const i = this.filtroCategorias.indexOf(cat);
+    if (i >= 0) this.filtroCategorias.splice(i, 1);
+    else this.filtroCategorias.push(cat);
+
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  limparFiltroCategoria(): void {
+    this.filtroCategorias = [];
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  tipoAtivo(tipo: TipoTx): boolean {
+    return this.filtroTipos.includes(tipo);
+  }
+
+  toggleTipo(tipo: TipoTx): void {
+    const i = this.filtroTipos.indexOf(tipo);
+    if (i >= 0) this.filtroTipos.splice(i, 1);
+    else this.filtroTipos.push(tipo);
+
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  limparFiltroTipo(): void {
+    this.filtroTipos = [];
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  valorAtivo(min?: number, max?: number): boolean {
+    return this.filtroValores.some((r) => r.min === min && r.max === max);
+  }
+
+  toggleValor(min?: number, max?: number): void {
+    const idx = this.filtroValores.findIndex(
+      (r) => r.min === min && r.max === max
+    );
+    if (idx >= 0) this.filtroValores.splice(idx, 1);
+    else this.filtroValores.push({ min, max });
+
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  limparFiltroValor(): void {
+    this.filtroValores = [];
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  limparTodosFiltros(): void {
+    this.definirFiltroMesAtual();
+    this.filtroCategorias = [];
+    this.filtroTipos = [];
+    this.filtroValores = [];
+    this.aplicarFiltros();
+    this.recalcularDashLocal();
+  }
+
+  private definirFiltroMesAtual(): void {
+    const agora = new Date();
+    const start = new Date(
+      agora.getFullYear(),
+      agora.getMonth(),
+      1,
+      0,
+      0,
+      0,
+      0
+    );
+    const end = new Date(
+      agora.getFullYear(),
+      agora.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
+
+    this.filtroMes = { start, end };
+
+    let mes = agora.toLocaleDateString("pt-BR", { month: "long" });
+    mes = mes.charAt(0).toUpperCase() + mes.slice(1);
+    this.mesLabel = mes;
+  }
+
+  private aplicarFiltros(): void {
+    let lista = [...this.txsAll];
+
+    // mês
+    if (this.filtroMes) {
+      const s = this.filtroMes.start.getTime();
+      const e = this.filtroMes.end.getTime();
+      lista = lista.filter((tx) => {
+        const t = new Date(tx.dateISO ?? 0).getTime();
+        return t >= s && t <= e;
+      });
+    }
+
+    // categorias (OR)
+    if (this.filtroCategorias.length) {
+      const cats = this.filtroCategorias.map((c) => c.toLowerCase());
+      lista = lista.filter((tx) => {
+        const c = (tx.category ?? "").toLowerCase();
+        return cats.some((wanted) => c.includes(wanted));
+      });
+    }
+
+    // tipos (OR)
+    if (this.filtroTipos.length) {
+      lista = lista.filter((tx) => {
+        const n = tx.numeric ?? 0;
+        return (
+          (n > 0 && this.filtroTipos.includes("entrada")) ||
+          (n < 0 && this.filtroTipos.includes("saida"))
+        );
+      });
+    }
+
+    // valores (ranges OR, usando abs)
+    if (this.filtroValores.length) {
+      lista = lista.filter((tx) => {
+        const v = Math.abs(tx.numeric ?? 0);
+        return this.filtroValores.some((r) => {
+          const okMin = r.min == null || v >= r.min;
+          const okMax = r.max == null || v <= r.max;
+          return okMin && okMax;
+        });
+      });
+    }
+
+    // home: corta
+    this.txs = lista.slice(0, 12);
+
+    // header baseado no TOTAL FILTRADO
+    this.totalUltimasLabel = `Total transações: ${lista.length}`;
+    const total = lista.reduce((acc, t) => acc + (t.numeric ?? 0), 0);
+    this.totalUltimasValor = this.formatarMoedaComSinal(total);
+  }
+
+  // =========================
+  // MODAL (AGORA É COMPONENTE SHARED)
+  // =========================
+  abrirNovaTransacao(): void {
+    if (!this.txModal) return;
+    this.txModal.open();
+  }
+
+  async onTxSaved(v: TxModalValue): Promise<void> {
+    const desc = (v.desc ?? "").trim() || "Transação";
+    const category = (v.category ?? "").trim() || desc;
+
+    const valorNum = this.parseValorMoeda(v.value);
+    if (valorNum <= 0) return;
+
+    const signed = v.type === "saida" ? -valorNum : valorNum;
+
+    // monta payload do backend (mesmo padrão que você já usa no salvarTransacao antigo)
+    const agora = new Date().toISOString();
+    const payload = {
+      description: desc,
+      value: signed,
+      category,
+      date: agora,
+      updatedAt: agora,
+    };
+
+    // this.salvando = true;
+
+    try {
+      // ✅ CHAMA API CREATE
+      const res: any = await this.services.createExpense(payload);
+
+      // tenta extrair id de qualquer formato
+      const id = String(
+        res?.id ??
+          res?._id ??
+          res?.transactionId ??
+          res?.data?.id ??
+          res?.data?._id ??
+          ""
+      );
+
+      // cria tx local com id retornado
+      const tx: Transaction = {
+        id: id || undefined,
+        desc,
+        category,
+        numeric: signed,
+        value: this.formatarMoedaComSinal(signed),
+      };
+
+      const ui = this.toUiTx(tx, agora);
+
+      // adiciona no topo
+      this.txsAll = [ui, ...this.txsAll];
+
+      // atualiza saldo local
+      const saldoAtual = this.converterMoedaParaNumero(this.saldoTotal);
+      this.saldoTotal = this.formatarMoedaSemSinal(saldoAtual + signed);
+
+      this.aplicarFiltros();
+      this.recalcularDashLocal();
+    } catch (e) {
+      console.error("Erro ao criar transação", e);
+    } finally {
+      // this.salvando = false;
+    }
   }
 
   private parseValorMoeda(v: string): number {
@@ -143,258 +456,124 @@ export class HomeComponent implements OnInit {
     return Number.isFinite(n) ? n : 0;
   }
 
-  private formatMoedaComSinal(valor: number): string {
-    const arred = Math.round(valor);
-    const sinal = arred < 0 ? "-" : "+";
-    return (
-      sinal + "R$ " + new Intl.NumberFormat("pt-BR").format(Math.abs(arred))
-    );
-  }
-
-  private formatMoedaSemSinal(valor: number): string {
-    const arred = Math.round(valor);
-    return "R$ " + new Intl.NumberFormat("pt-BR").format(arred);
-  }
-
-  private montarPayload(
-    descricao: string,
-    valorAssinado: number,
-    categoria: string
-  ): TransactionPayload {
-    const agora = new Date().toISOString();
-    return {
-      description: descricao,
-      value: valorAssinado,
-      category: categoria,
-      date: agora,
-      updatedAt: agora,
-    };
-  }
-
-  async salvarTransacao(): Promise<void> {
-    const desc = this.form.desc.trim() || "Transação";
-    const category = this.form.category.trim() || desc;
-
-    const valorNum = this.parseValorMoeda(this.form.value);
-    if (valorNum <= 0) {
-      this.fecharModalNovaTransacao();
-      return;
-    }
-
-    const valorAssinado = this.form.type === "saida" ? -valorNum : valorNum;
-    const payload = this.montarPayload(desc, valorAssinado, category);
-
-    this.salvando = true;
-    try {
-      // ✅ Se você quer que /transactions seja só leitura, então aqui só cria.
-      // Se futuramente quiser editar no home, você implementa update aqui também.
-      const res: any = await this.services.createExpense(payload);
-      const id = String(
-        res?.id ??
-          res?._id ??
-          res?.transactionId ??
-          res?.data?.id ??
-          res?.data?._id ??
-          ""
-      );
-
-      // atualiza UI local sem dar 3 GET
-      const tx: Transaction = {
-        id: id || undefined,
-        desc,
-        category,
-        numeric: valorAssinado,
-        value: this.formatMoedaComSinal(valorAssinado),
-      };
-
-      // lista rica (home) — joga pro topo
-      this.inserirTxNaHome(tx);
-
-      // KPIs locais (saldo)
-      const saldoAtual = this.converterMoedaParaNumero(this.saldoTotal);
-      this.saldoTotal = this.formatMoedaSemSinal(saldoAtual + valorAssinado);
-
-      // recalcula progress/meta etc
-      this.recalcularDashLocal();
-
-      this.fecharModalNovaTransacao();
-    } catch (e) {
-      console.error("Erro ao criar transação", e);
-    } finally {
-      this.salvando = false;
-    }
-  }
-
-  private inserirTxNaHome(tx: Transaction): void {
-    const dt = new Date(); // agora
-    const groupLabel = "Hoje";
-
-    const category = (tx.category ?? "").trim();
-
-    const ui = {
-      ...tx,
-      groupLabel,
-      tags: this.tagsFrom(category),
-      icon: this.iconFrom(category, tx.desc, tx.numeric ?? 0),
-    } as UiTx;
-
-    this.txs = [ui, ...this.txs].slice(0, 6);
-
-    this.totalUltimasLabel = `Total transações: ${this.txs.length}`;
-    const totalUltimas = this.txs.reduce((acc, t) => acc + (t.numeric ?? 0), 0);
-    this.totalUltimasValor = this.formatMoedaComSinal(totalUltimas);
-  }
-
-  obterValorKpi(chave: ChaveKpi): string {
-    return chave === "saldoTotal" ? this.saldoTotal : this.metaMensal;
-  }
-
-  podeEditarKpi(chave: ChaveKpi): boolean {
-    const config = this.kpis.find((k) => k.chave === chave);
-    return config?.editavel === true;
-  }
-
-  iniciarEdicao(chave: ChaveKpi): void {
-    if (!this.podeEditarKpi(chave)) return;
-    this.editValues[chave] = this.obterValorKpi(chave);
-    this.editing[chave] = true;
-  }
-
-  salvarEdicao(chave: ChaveKpi): void {
-    if (!this.podeEditarKpi(chave)) return;
-
-    if (chave === "metaMensal") {
-      this.metaMensal = this.editValues.metaMensal;
-      localStorage.setItem(this.chaveStorageMetaMensal, this.metaMensal);
-      this.recalcularDashLocal();
-    }
-
-    this.editing[chave] = false;
-  }
-
-  cancelarEdicao(chave: ChaveKpi): void {
-    this.editValues[chave] = this.obterValorKpi(chave);
-    this.editing[chave] = false;
-  }
-
-  private carregarMetaMensalDoStorage(): void {
-    const valorSalvo = localStorage.getItem(this.chaveStorageMetaMensal);
-    if (valorSalvo) {
-      this.metaMensal = valorSalvo;
-      this.editValues.metaMensal = valorSalvo;
-      return;
-    }
-
-    this.metaMensal = "R$ 4.000";
-    this.editValues.metaMensal = this.metaMensal;
-    localStorage.setItem(this.chaveStorageMetaMensal, this.metaMensal);
-  }
-
+  // =========================
+  // API
+  // =========================
   private async carregarSaldoTotal(): Promise<void> {
     try {
-      const saldoTotalNumero = await this.services.getSomatorioLancamentos();
-      this.saldoTotal = this.formatarMoedaSemSinal(saldoTotalNumero);
-      this.editValues.saldoTotal = this.saldoTotal;
+      const saldo = await this.services.getSomatorioLancamentos();
+      this.saldoTotal = this.formatarMoedaSemSinal(saldo);
     } catch (e) {
       console.error("Erro ao buscar saldo total", e);
     }
   }
 
-  private async carregarUltimasTransacoes(): Promise<void> {
+  private async carregarTransacoes(): Promise<void> {
     try {
       const resposta: any = await this.services.getAllTransactions();
       const lista = Array.isArray(resposta) ? resposta : resposta?.data ?? [];
 
-      const ultimas = (lista as any[]).slice(0, 6); // na imagem tem mais que 5, fica melhor
-
-      const agora = new Date();
-      const hojeKey = this.dateKey(agora);
-      const ontem = new Date(agora);
-      ontem.setDate(agora.getDate() - 1);
-      const ontemKey = this.dateKey(ontem);
-
-      this.txs = ultimas.map((item) => {
+      const normalizadas: UiTx[] = (lista as any[]).map((item) => {
         const valor: number = item.value ?? 0;
-        const descricao: string = item.description ?? item.desc ?? "Transação";
+        const desc: string = item.description ?? item.desc ?? "Transação";
         const id: string | undefined =
           item.id ?? item._id ?? item.transactionId;
+        const iso = item.date ? String(item.date) : new Date().toISOString();
 
-        const dt = item.date ? new Date(item.date) : new Date();
-        const key = this.dateKey(dt);
-
-        const groupLabel =
-          key === hojeKey
-            ? "Hoje"
-            : key === ontemKey
-            ? "Ontem"
-            : this.formatarDataCurta(dt);
-
-        const category = (item.category ?? "").trim();
-
-        return {
+        const base: Transaction = {
           id,
-          desc: descricao,
-          category,
+          desc,
+          category: (item.category ?? "").trim(),
           numeric: valor,
           value: this.formatarMoedaComSinal(valor),
-          groupLabel,
-          tags: this.tagsFrom(category),
-          icon: this.iconFrom(category, descricao, valor),
-        } as UiTx;
+        };
+
+        return this.toUiTx(base, iso);
       });
 
-      // header
-      this.totalUltimasLabel = `Total transações: ${this.txs.length}`;
-      const totalUltimas = this.txs.reduce(
-        (acc, t) => acc + (t.numeric ?? 0),
-        0
-      );
-      this.totalUltimasValor = this.formatarMoedaComSinal(totalUltimas);
+      normalizadas.sort((a, b) => {
+        const da = new Date(a.dateISO ?? 0).getTime();
+        const db = new Date(b.dateISO ?? 0).getTime();
+        return db - da;
+      });
+
+      this.txsAll = normalizadas;
     } catch (e) {
       console.error("Erro ao buscar transações", e);
+      this.txsAll = [];
     }
   }
 
+  // =========================
+  // DASH LOCAL
+  // =========================
   clampPercent(value: number | null | undefined): number {
     const v = typeof value === "number" ? value : 0;
     return Math.max(0, Math.min(100, v));
   }
 
-  // chamado quando criar/editar/excluir no modal (você já emite no TransacoesComponent)
-  // aqui você escolhe: ou atualiza local, ou dá reload.
-  async receberTransacaoFilha(): Promise<void> {
-    // honesto: pra não dar bug de saldo divergente, recarrega só o necessário
-    await Promise.all([
-      this.carregarSaldoTotal(),
-      this.carregarUltimasTransacoes(),
-    ]);
-    this.recalcularDashLocal();
-  }
-
   private recalcularDashLocal(): void {
-    const gastos = this.txs.reduce((acc, t) => {
+    const listaMes = this.filtroMes
+      ? this.txsAll.filter((tx) => {
+          const t = new Date(tx.dateISO ?? 0).getTime();
+          return (
+            t >= this.filtroMes!.start.getTime() &&
+            t <= this.filtroMes!.end.getTime()
+          );
+        })
+      : this.txsAll;
+
+    const gastos = listaMes.reduce((acc, t) => {
       const n = t.numeric ?? 0;
       return acc + (n < 0 ? Math.abs(n) : 0);
     }, 0);
 
     this.gastoNoMes = "-" + this.formatarMoedaSemSinal(gastos);
 
-    const saldo = this.converterMoedaParaNumero(this.saldoTotal);
-    const meta = Math.max(0, this.converterMoedaParaNumero(this.metaMensal));
-    const prog = meta > 0 ? Math.round((saldo / meta) * 100) : 0;
-
-    this.metaProgress = this.clampPercent(prog);
-
-    const restante = Math.max(0, meta - saldo);
-    this.metaRestante = this.formatarMoedaSemSinal(restante);
+    // metaProgress agora só usa “saldoTotal” como referência (sem meta mensal)
+    // Se você quiser uma barra diferente aqui, você define.
+    this.metaProgress = 0;
   }
-  // ===== Helpers =====
+
+  // =========================
+  // HELPERS UI
+  // =========================
+  private toUiTx(tx: Transaction, dateISO: string): UiTx {
+    const dt = new Date(dateISO);
+    const groupLabel = this.groupLabelFromDate(dt);
+
+    const category = (tx.category ?? "").trim();
+    const numeric = tx.numeric ?? 0;
+
+    return {
+      ...tx,
+      dateISO,
+      groupLabel,
+      tags: this.tagsFrom(category),
+      icon: this.iconFrom(category, tx.desc, numeric),
+    };
+  }
+
+  private groupLabelFromDate(dt: Date): string {
+    const agora = new Date();
+    const hojeKey = this.dateKey(agora);
+
+    const ontem = new Date(agora);
+    ontem.setDate(agora.getDate() - 1);
+    const ontemKey = this.dateKey(ontem);
+
+    const key = this.dateKey(dt);
+    if (key === hojeKey) return "Hoje";
+    if (key === ontemKey) return "Ontem";
+    return this.formatarDataCurta(dt);
+  }
+
   private tagsFrom(category: string): string[] {
     if (!category) return [];
-    // você pode sofisticar: mapear categorias em grupos
-    if (category.toLowerCase().includes("alim")) return ["Alimentação"];
-    if (category.toLowerCase().includes("saud")) return ["Saúde"];
-    if (category.toLowerCase().includes("transf")) return ["Transferência"];
+    const c = category.toLowerCase();
+    if (c.includes("alim")) return ["Alimentação"];
+    if (c.includes("saud")) return ["Saúde"];
+    if (c.includes("transf") || c.includes("pix")) return ["Transferência"];
     return [category];
   }
 
@@ -413,7 +592,6 @@ export class HomeComponent implements OnInit {
   }
 
   private formatarDataCurta(d: Date): string {
-    // ex: 10 Janeiro
     const dia = d.getDate();
     const mes = d.toLocaleDateString("pt-BR", { month: "long" });
     return `${dia} ${mes.charAt(0).toUpperCase() + mes.slice(1)}`;
@@ -422,43 +600,51 @@ export class HomeComponent implements OnInit {
   private converterMoedaParaNumero(valorStr: string): number {
     if (!valorStr) return 0;
     const negativo = valorStr.includes("-");
-    let valorLimpo = valorStr.replace(/[R$+\-\s]/g, "");
-    valorLimpo = valorLimpo.replace(/\./g, "");
-    valorLimpo = valorLimpo.replace(/,/g, ".");
-    const numero = Number(valorLimpo);
-    if (Number.isNaN(numero)) return 0;
-    return negativo ? -numero : numero;
+    let s = valorStr.replace(/[R$+\-\s]/g, "");
+    s = s.replace(/\./g, "");
+    s = s.replace(/,/g, ".");
+    const n = Number(s);
+    if (Number.isNaN(n)) return 0;
+    return negativo ? -n : n;
   }
 
   private formatarMoedaSemSinal(valor: number): string {
-    const arredondado = Math.round(valor);
-    return "R$ " + new Intl.NumberFormat("pt-BR").format(arredondado);
+    const arred = Math.round(valor);
+    return "R$ " + new Intl.NumberFormat("pt-BR").format(arred);
   }
 
   private formatarMoedaComSinal(valor: number): string {
-    const arredondado = Math.round(valor);
-    const sinal = arredondado < 0 ? "-" : "+";
+    const arred = Math.round(valor);
+    const sinal = arred < 0 ? "-" : "+";
     return (
-      sinal +
-      "R$ " +
-      new Intl.NumberFormat("pt-BR").format(Math.abs(arredondado))
+      sinal + "R$ " + new Intl.NumberFormat("pt-BR").format(Math.abs(arred))
     );
   }
 
-  // útil pro *ngFor com agrupamento
   trackById(_: number, item: UiTx): string {
-    return item.id ?? item.desc + item.value;
+    return item.id ?? item.desc + item.value + (item.dateISO ?? "");
   }
 
-  async onTxCriada(tx: Transaction): Promise<void> {
-    // opção 1 (rápida e correta): recarregar o que precisa
-    await Promise.all([
-      this.carregarSaldoTotal(),
-      this.carregarUltimasTransacoes(),
-    ]);
-    this.recalcularDashLocal();
+  // =========================
+  // METAS CRIADAS
+  // =========================
+  get metasBarPercent(): number {
+    const max = 10;
+    return Math.min(100, Math.round((this.metasCriadas / max) * 100));
+  }
 
-    // opção 2 (mais leve): atualizar localmente sem GET
-    // (aí você precisa garantir numeric etc)
+  irParaMetas(): void {
+    // ajuste a rota real do seu app
+    this.router.navigate(["/dashboard/goals"]);
+  }
+
+  private carregarMetasCriadas(): void {
+    try {
+      const raw = localStorage.getItem(this.GOALS_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      this.metasCriadas = Array.isArray(list) ? list.length : 0;
+    } catch {
+      this.metasCriadas = 0;
+    }
   }
 }

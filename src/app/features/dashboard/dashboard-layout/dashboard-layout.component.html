@@ -3,58 +3,31 @@
   <aside class="sidebar" [class.sidebar--open]="mobileNavOpen">
     <div class="brand">
       <div class="brand__logo">Planeja<span>+</span></div>
-      <button class="sidebar__close" type="button" (click)="fecharNavMobile()">
-        ✕
-      </button>
+      <button class="sidebar__close" type="button" (click)="fecharNavMobile()">✕</button>
     </div>
 
     <nav class="nav">
-      <a
-        class="nav__item"
-        routerLink="/home"
-        routerLinkActive="nav__item--active"
-        (click)="fecharNavMobile()"
-      >
+      <a class="nav__item" routerLink="/home" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
         <span class="nav__icon">🏠</span>
         <span class="nav__text">Painel</span>
       </a>
 
-      <a
-        class="nav__item"
-        routerLink="/transactions"
-        routerLinkActive="nav__item--active"
-        (click)="fecharNavMobile()"
-      >
+      <a class="nav__item" routerLink="/transactions" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
         <span class="nav__icon">💸</span>
         <span class="nav__text">Transações</span>
       </a>
 
-      <a
-        class="nav__item"
-        routerLink="/goals"
-        routerLinkActive="nav__item--active"
-        (click)="fecharNavMobile()"
-      >
+      <a class="nav__item" routerLink="/goals" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
         <span class="nav__icon">🎯</span>
         <span class="nav__text">Metas</span>
       </a>
 
-      <a
-        class="nav__item"
-        routerLink="/reports"
-        routerLinkActive="nav__item--active"
-        (click)="fecharNavMobile()"
-      >
+      <a class="nav__item" routerLink="/reports" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
         <span class="nav__icon">📊</span>
         <span class="nav__text">Relatórios</span>
       </a>
 
-      <a
-        class="nav__item"
-        routerLink="/profile"
-        routerLinkActive="nav__item--active"
-        (click)="fecharNavMobile()"
-      >
+      <a class="nav__item" routerLink="/profile" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
         <span class="nav__icon">⚙️</span>
         <span class="nav__text">Configurações</span>
       </a>
@@ -63,68 +36,63 @@
     <div class="sidebar__footer">
       <div class="mini-card">
         <div class="mini-card__title">Dica rápida</div>
-        <div class="mini-card__text">
-          Use “Buscar” para filtrar por descrição ou categoria.
-        </div>
+        <div class="mini-card__text">Use “Buscar” para filtrar por categoria, tipo ou valor.</div>
       </div>
     </div>
   </aside>
 
   <!-- MAIN -->
   <div class="main">
-    <!-- TOPBAR -->
-    <!-- <header class="topbar">
-      <button class="icon-button" type="button" aria-label="Abrir menu" (click)="alternarNavMobile()">☰</button>
+    <div class="shell__top">
+      <div class="ui-searchbar ui-searchbar--advanced">
+        <span class="ui-searchbar__icon">🔎</span>
 
-      <div class="search">
-        <span class="search__icon">🔎</span>
+        <select
+          class="ui-searchbar__select"
+          [(ngModel)]="tipoBusca"
+          (ngModelChange)="onTipoBuscaChange()"
+        >
+          <option value="categoria">Categoria</option>
+          <option value="tipo">Tipo</option>
+          <option value="valor">Valor</option>
+        </select>
+
         <input
-          class="search__input"
-          placeholder="Buscar lançamentos..."
+          *ngIf="tipoBusca !== 'valor'; else valorInputs"
+          class="ui-searchbar__input"
+          type="text"
+          placeholder="Ex: Alimentação | entrada | saída"
           [(ngModel)]="textoBusca"
           (keyup.enter)="executarBusca()"
         />
-        <button class="search__action" type="button" (click)="executarBusca()">Buscar</button>
-      </div>
 
-      <div class="topbar__actions">
-        <button class="chip" type="button" (click)="abrirTransacao()">+ Nova transação</button>
-        <button class="chip chip--primary" type="button" routerLink="/goals">Criar meta</button>
+        <ng-template #valorInputs>
+          <input
+            class="ui-searchbar__input ui-searchbar__input--sm"
+            type="number"
+            placeholder="Min"
+            [(ngModel)]="valorMin"
+            (keyup.enter)="executarBusca()"
+          />
+          <input
+            class="ui-searchbar__input ui-searchbar__input--sm"
+            type="number"
+            placeholder="Max"
+            [(ngModel)]="valorMax"
+            (keyup.enter)="executarBusca()"
+          />
+        </ng-template>
 
-        <button
-          class="icon-button"
-          type="button"
-          (click)="visibility.toggle()"
-          [attr.aria-pressed]="(visibility.showBalances$ | async)"
-          [title]="(visibility.showBalances$ | async) ? 'Ocultar valores' : 'Mostrar valores'"
-        >
-          <span *ngIf="(visibility.showBalances$ | async)">👁️</span>
-          <span *ngIf="!(visibility.showBalances$ | async)">🙈</span>
-        </button>
-      </div>
-    </header> -->
-    <div class="shell__top">
-      <div class="ui-searchbar">
-        <span class="ui-searchbar__icon">🔎</span>
-        <input
-          class="ui-searchbar__input"
-          type="text"
-          placeholder="Buscar..."
-        />
+        <button class="ui-searchbar__btn" type="button" (click)="executarBusca()">Buscar</button>
+        <button class="ui-searchbar__btn ui-searchbar__btn--ghost" type="button" (click)="limparFiltros()">Limpar</button>
       </div>
 
       <button class="ui-icon-pill" title="Atalhos" type="button">⚪</button>
-      <button class="ui-icon-pill" title="Notificações" type="button">
-        🔴
-      </button>
+      <button class="ui-icon-pill" title="Notificações" type="button">🔴</button>
     </div>
 
     <!-- OVERLAY MOBILE -->
-    <div
-      class="overlay"
-      *ngIf="mobileNavOpen"
-      (click)="fecharNavMobile()"
-    ></div>
+    <div class="overlay" *ngIf="mobileNavOpen" (click)="fecharNavMobile()"></div>
 
     <!-- CONTENT -->
     <main class="content">
