@@ -7,3 +7,12 @@
   // box-shadow: 0 0 12px rgba(0,0,0,0.3);
   text-align: center;
 }
+
+:host {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: auto; /* se tela for pequena */
+}

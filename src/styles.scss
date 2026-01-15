@@ -93,6 +93,8 @@ input {
 form {
   display: flex;
   flex-direction: column;
+  flex-direction: column;
+  gap: 1rem;
 
   input {
     width: auto;
