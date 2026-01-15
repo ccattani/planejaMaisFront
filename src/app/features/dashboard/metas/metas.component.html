@@ -1,5 +1,5 @@
 <section class="content">
-    <div class="page-head">
+  <div class="page-head">
     <div>
       <h2>Metas</h2>
       <p>Crie metas mensais ou anuais (month 0 = anual).</p>
@@ -84,8 +84,8 @@
             </div>
 
             <div class="row__btns">
-              <button class="btn btn-ghost" type="button" disabled>Editar</button>
-              <button class="btn btn-ghost" type="button" disabled>Excluir</button>
+              <button class="btn btn-ghost" type="button" (click)="editarMeta(g)">Editar</button>
+              <button class="btn btn-ghost" type="button" (click)="excluirMeta(g)">Excluir</button>
             </div>
           </div>
         </div>
@@ -141,12 +141,13 @@
   <button class="fab" type="button" (click)="abrirCriarMeta()" aria-label="Adicionar meta">+</button>
 </section>
 
-<!-- MODAL: Criar Meta -->
+<!-- MODAL -->
 <div class="modal-backdrop" *ngIf="isCreateOpen" (click)="fecharCriarMeta()"></div>
 
 <div class="modal" *ngIf="isCreateOpen" role="dialog" aria-modal="true">
   <div class="modal__header">
-    <h3>Criar uma nova meta</h3>
+    <!-- ✅ muda título conforme modo -->
+    <h3>{{ isEditMode ? 'Editar meta' : 'Criar uma nova meta' }}</h3>
     <button class="iconbtn" type="button" (click)="fecharCriarMeta()">✕</button>
   </div>
 
@@ -228,8 +229,10 @@
     <button class="btn btn-ghost" type="button" (click)="fecharCriarMeta()" [disabled]="saving">
       Cancelar
     </button>
-    <button class="btn btn-primary" type="button" (click)="submitCriarMeta()" [disabled]="saving">
-      {{ saving ? 'Salvando...' : 'Salvar meta' }}
+
+    <!-- ✅ AQUI está a correção: chama submitMeta() -->
+    <button class="btn btn-primary" type="button" (click)="submitMeta()" [disabled]="saving">
+      {{ saving ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar meta') }}
     </button>
   </div>
 </div>

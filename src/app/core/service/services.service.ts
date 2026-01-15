@@ -119,16 +119,11 @@ export class ServicesService {
       params = params.set("endValue", String(filtros.endValue));
     }
 
-    // tipo (entrada/saida)
-    // Alguns backends aceitam repetição: type=entrada&type=saida
-    // Outros aceitam csv: type=entrada,saida
-    // Aqui vou mandar CSV (mais comum). Se seu backend for diferente, me fala e eu ajusto.
     if (filtros?.type) {
       const v = Array.isArray(filtros.type) ? filtros.type.join(",") : filtros.type;
       params = params.set("type", v);
     }
 
-    // ranges múltiplos (se você implementar no backend)
     if (filtros?.valueRange) {
       params = params.set("valueRange", filtros.valueRange);
     }
@@ -180,9 +175,7 @@ export class ServicesService {
     });
   }
 
-    createGoal(payload: CreateGoalPayload) {
-    // Se você já tem interceptor que injeta Authorization, isso é redundante,
-    // mas aqui garante funcionar mesmo sem interceptor.
+  createGoal(payload: CreateGoalPayload) {
     const token =
       localStorage.getItem('token') ||
       sessionStorage.getItem('token');
@@ -194,9 +187,18 @@ export class ServicesService {
     return firstValueFrom(this.http.post(`${this.api}/goal/create`, payload, { headers }));
   }
 
-  getMyGoals(year: number, month: number) {
+  getMyGoals() {
     return firstValueFrom(
-      this.http.get(`${this.api}/goal/myGoal/${year}/${month}`)
+      this.http.get(`${this.api}/goal/myGoal`)
     );
   }
+
+  updateGoals(_id: string, payload: CreateGoalPayload) {
+    return firstValueFrom(this.http.patch(`${this.api}/goal/update/${_id}`, payload));
+  }
+
+  deleteGoals(_id: string) {
+    return firstValueFrom(this.http.delete(`${this.api}/goal/delete/${_id}`));
+  }
+
 }

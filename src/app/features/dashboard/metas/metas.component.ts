@@ -32,10 +32,16 @@ export class MetasComponent implements OnInit {
   carregandoLista = false;
   erroLista = "";
 
-  // filtros reais da API
+  // filtros (se ainda não usa, ok manter)
   filtroYear = new Date().getFullYear();
   filtroTipo: "mensal" | "anual" = "mensal";
-  filtroMonth = new Date().getMonth() + 1; // 1..12
+  filtroMonth = new Date().getMonth() + 1;
+
+  // =======================
+  // EDIT MODE
+  // =======================
+  isEditMode = false;
+  editingId: string | null = null;
 
   // =======================
   // TÍTULOS (front-only)
@@ -43,7 +49,7 @@ export class MetasComponent implements OnInit {
   private goalTitles: Record<string, string> = this.loadTitles();
 
   // =======================
-  // MODAL CREATE
+  // MODAL
   // =======================
   isCreateOpen = false;
   saving = false;
@@ -72,7 +78,7 @@ export class MetasComponent implements OnInit {
     }
   }
 
-  private saveTitles() {
+  private saveTitles(): void {
     localStorage.setItem(TITLES_KEY, JSON.stringify(this.goalTitles));
   }
 
@@ -100,20 +106,14 @@ export class MetasComponent implements OnInit {
   }
 
   // =======================
-  // LISTAGEM: GET /myGoal/{year}/{month}
+  // LISTAGEM
   // =======================
   async buscarMetas(): Promise<void> {
     this.erroLista = "";
     this.carregandoLista = true;
 
-    const year = Number(this.filtroYear);
-    const month =
-      this.filtroTipo === "anual" ? 0 : Number(this.filtroMonth);
-
     try {
-      const res: any = await this.service.getMyGoals(year, month);
-
-      // normaliza retorno: pode vir array direto, ou res.data, etc.
+      const res: any = await this.service.getMyGoals();
       const list = Array.isArray(res) ? res : res?.data ?? res?.goals ?? [];
 
       this.goals = (Array.isArray(list) ? list : []).sort((a, b) => {
@@ -134,8 +134,10 @@ export class MetasComponent implements OnInit {
 
   onFiltroTipoChange(tipo: "mensal" | "anual") {
     this.filtroTipo = tipo;
-    // se virar mensal e o mês estiver inválido, corrige
-    if (tipo === "mensal" && (!this.filtroMonth || this.filtroMonth < 1 || this.filtroMonth > 12)) {
+    if (
+      tipo === "mensal" &&
+      (!this.filtroMonth || this.filtroMonth < 1 || this.filtroMonth > 12)
+    ) {
       this.filtroMonth = new Date().getMonth() + 1;
     }
     this.buscarMetas();
@@ -164,6 +166,9 @@ export class MetasComponent implements OnInit {
   }
 
   abrirCriarMeta() {
+    this.isEditMode = false;
+    this.editingId = null;
+
     this.form = this.blankForm();
     this.touched = false;
     this.errorMsg = "";
@@ -172,8 +177,15 @@ export class MetasComponent implements OnInit {
 
   fecharCriarMeta() {
     if (this.saving) return;
+
     this.isCreateOpen = false;
+
+    this.isEditMode = false;
+    this.editingId = null;
+    this.touched = false;
+    this.errorMsg = "";
   }
+
 
   onTipoChange(tipo: "mensal" | "anual") {
     this.form.tipo = tipo;
@@ -191,14 +203,12 @@ export class MetasComponent implements OnInit {
   }
 
   private buildPayload(): CreateGoalPayload | string {
-    // título é front-only (backend não aceita)
     if (!this.form.title || this.form.title.trim().length < 3) {
       return "Título obrigatório (mín. 3 caracteres).";
     }
 
     const year = Number(this.form.year);
-    if (!Number.isInteger(year) || year < 2000 || year > 2100)
-      return "Ano inválido.";
+    if (!Number.isInteger(year) || year < 2000 || year > 2100) return "Ano inválido.";
 
     const goal = Number(this.form.goal);
     if (!Number.isFinite(goal)) return "Informe um valor de meta válido.";
@@ -213,11 +223,20 @@ export class MetasComponent implements OnInit {
     }
 
     return {
+      title: this.form.title.trim(), // front-only
       month,
       year,
       goal,
       updatedAt: new Date().toISOString(),
     };
+  }
+
+  // =======================
+  // SUBMIT (DECIDE CREATE vs UPDATE)
+  // =======================
+  async submitMeta() {
+    if (this.isEditMode) return this.submitEditarMeta();
+    return this.submitCriarMeta();
   }
 
   // =======================
@@ -236,29 +255,36 @@ export class MetasComponent implements OnInit {
     this.saving = true;
 
     try {
-      const res: any = await this.service.createGoal(payloadOrError);
+      // se backend NÃO aceita title, não mande
+      const payloadForApi: any = {
+        month: payloadOrError.month,
+        year: payloadOrError.year,
+        goal: payloadOrError.goal,
+        updatedAt: payloadOrError.updatedAt,
+      };
 
-      const created =
-        res?.data ?? res?.goal ?? res ?? payloadOrError;
+      const res: any = await this.service.createGoal(payloadForApi);
+
+      const created = res?.data ?? res?.goal ?? res ?? payloadOrError;
 
       const newItem: GoalItem = {
+        _id: created._id,
         month: created.month ?? payloadOrError.month,
         year: created.year ?? payloadOrError.year,
         goal: created.goal ?? payloadOrError.goal,
         updatedAt: created.updatedAt ?? payloadOrError.updatedAt,
+        user: created.user,
+        title: payloadOrError.title, // local
       };
 
       // salva título local associado ao período
       const key = this.goalKey(newItem);
-      this.goalTitles[key] = this.form.title.trim();
+      this.goalTitles[key] = payloadOrError.title;
       this.saveTitles();
 
       this.isCreateOpen = false;
-
-      // RECARREGA LISTAGEM DO BACKEND (não confie em state local)
       await this.buscarMetas();
     } catch (err: any) {
-      // trata 409 como duplicidade amigável
       if (err?.status === 409) {
         const periodo =
           payloadOrError.month === 0
@@ -267,7 +293,7 @@ export class MetasComponent implements OnInit {
 
         this.errorMsg =
           `Já existe uma meta cadastrada para ${periodo}. ` +
-          `A API bloqueia duplicidade (409). Para mudar o valor, precisa endpoint de UPDATE.`;
+          `A API bloqueia duplicidade (409). Para mudar o valor, use Editar.`;
       } else {
         this.errorMsg =
           err?.error?.message ||
@@ -276,6 +302,116 @@ export class MetasComponent implements OnInit {
       }
     } finally {
       this.saving = false;
+    }
+  }
+
+  // =======================
+  // EDITAR (UPDATE)
+  // =======================
+  async submitEditarMeta() {
+    this.touched = true;
+    this.errorMsg = "";
+
+    if (!this.editingId) {
+      this.errorMsg = "Não foi possível editar: ID da meta não encontrado.";
+      return;
+    }
+
+    const payloadOrError = this.buildPayload();
+    if (typeof payloadOrError === "string") {
+      this.errorMsg = payloadOrError;
+      return;
+    }
+
+    this.saving = true;
+
+    try {
+      const payloadForApi: any = {
+        title: payloadOrError.title,
+        month: payloadOrError.month,
+        year: payloadOrError.year,
+        goal: payloadOrError.goal,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await this.service.updateGoals(this.editingId, payloadForApi);
+
+      // atualiza título local pelo NOVO período (se mudou mês/ano)
+      const key = this.goalKey({ year: payloadOrError.year, month: payloadOrError.month });
+      this.goalTitles[key] = payloadOrError.title;
+      this.saveTitles();
+
+      this.fecharCriarMeta();
+      await this.buscarMetas();
+    } catch (err: any) {
+      if (err?.status === 409) {
+        const periodo =
+          payloadOrError.month === 0
+            ? `ano ${payloadOrError.year} (anual)`
+            : `mês ${payloadOrError.month}/${payloadOrError.year}`;
+
+        this.errorMsg =
+          `Já existe uma meta cadastrada para ${periodo}. ` +
+          `A API bloqueia duplicidade (409).`;
+      } else {
+        this.errorMsg =
+          err?.error?.message ||
+          err?.message ||
+          "Erro ao editar meta. Verifique token e endpoint.";
+      }
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  // =======================
+  // ACTIONS
+  // =======================
+  editarMeta(g: GoalItem) {
+    if (!g?._id) {
+      this.errorMsg = "Não foi possível editar: meta sem _id.";
+      return;
+    }
+
+    this.isEditMode = true;
+    this.editingId = g._id;
+    this.touched = false;
+    this.errorMsg = "";
+
+    this.form = {
+      title: this.getGoalTitle(g),
+      tipo: g.month === 0 ? "anual" : "mensal",
+      month: g.month === 0 ? 0 : g.month,
+      year: g.year,
+      goal: Number(g.goal),
+    };
+
+    this.isCreateOpen = true;
+  }
+
+  async excluirMeta(g: GoalItem) {
+    if (!g?._id) {
+      this.erroLista = "Não foi possível excluir: meta sem _id.";
+      return;
+    }
+
+    const periodo = g.month === 0 ? `Ano ${g.year} (anual)` : `${g.month}/${g.year}`;
+    const ok = confirm(`Excluir a meta de ${periodo}? Essa ação não tem volta.`);
+    if (!ok) return;
+
+    try {
+      await this.service.deleteGoals(g._id);
+
+      const key = this.goalKey(g);
+      delete this.goalTitles[key];
+      this.saveTitles();
+
+      await this.buscarMetas();
+    } catch (err: any) {
+      this.erroLista =
+        err?.error?.message ||
+        err?.message ||
+        "Erro ao excluir meta.";
     }
   }
 }
