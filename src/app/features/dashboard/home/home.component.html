@@ -1,91 +1,48 @@
 <section class="kpis">
-  <div class="kpi-card">
+  <div class="kpi-card" *ngFor="let kpi of kpis">
     <div class="kpi-row">
       <div class="kpi-left">
-        <span class="kpi-ico">💳</span>
+        <span class="kpi-ico" aria-hidden="true">{{ kpi.icone }}</span>
+
         <div class="kpi-text">
-          <div class="kpi-label">Saldo total</div>
+          <div class="kpi-label">{{ kpi.titulo }}</div>
+
           <div class="kpi-value">
-            <button class="kpi-button" *ngIf="!editing.saldoTotal" (click)="iniciarEdicao('saldoTotal')">
-              <ng-container *ngIf="(visibility.showBalances$ | async); else hiddenSaldo">{{ saldoTotal }}</ng-container>
-            </button>
-            <div class="kpi-edit" *ngIf="editing.saldoTotal">
-              <input [(ngModel)]="editValues.saldoTotal" />
-              <button class="btn" (click)="salvarEdicao('saldoTotal')">Salvar</button>
-              <button class="btn ghost" (click)="cancelarEdicao('saldoTotal')">Cancelar</button>
+            <!-- EDIÇÃO -->
+            <div class="kpi-edit" *ngIf="editing[kpi.chave]; else visualizacao">
+              <input [(ngModel)]="editValues[kpi.chave]" />
+              <button type="button" class="btn" (click)="salvarEdicao(kpi.chave)">Salvar</button>
+              <button type="button" class="btn ghost" (click)="cancelarEdicao(kpi.chave)">Cancelar</button>
             </div>
+
+            <!-- VISUALIZAÇÃO -->
+            <ng-template #visualizacao>
+              <ng-container *ngIf="(visibility.showBalances$ | async); else valorOculto">
+                <button
+                  *ngIf="podeEditarKpi(kpi.chave); else valorSomenteLeitura"
+                  type="button"
+                  class="kpi-button"
+                  (click)="iniciarEdicao(kpi.chave)"
+                >
+                  {{ obterValorKpi(kpi.chave) }}
+                </button>
+
+                <ng-template #valorSomenteLeitura>
+                  <div class="kpi-static">{{ obterValorKpi(kpi.chave) }}</div>
+                </ng-template>
+              </ng-container>
+            </ng-template>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="kpi-card">
-    <div class="kpi-row">
-      <div class="kpi-left">
-        <span class="kpi-ico">🎯</span>
-        <div class="kpi-text">
-          <div class="kpi-label">Meta de guardar</div>
-          <div class="kpi-value">
-            <button class="kpi-button" *ngIf="!editing.metaMensal" (click)="iniciarEdicao('metaMensal')">
-              <ng-container *ngIf="(visibility.showBalances$ | async); else hiddenMeta">{{ metaMensal }}</ng-container>
-            </button>
-            <div class="kpi-edit" *ngIf="editing.metaMensal">
-              <input [(ngModel)]="editValues.metaMensal" />
-              <button class="btn" (click)="salvarEdicao('metaMensal')">Salvar</button>
-              <button class="btn ghost" (click)="cancelarEdicao('metaMensal')">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="kpi-card">
-    <div class="kpi-row">
-      <div class="kpi-left">
-        <span class="kpi-ico">📌</span>
-        <div class="kpi-text">
-          <div class="kpi-label">Guardado no mês</div>
-          <div class="kpi-value">
-            <button class="kpi-button" *ngIf="!editing.guardadoNoMes" (click)="iniciarEdicao('guardadoNoMes')">
-              <ng-container *ngIf="(visibility.showBalances$ | async); else hiddenGuardado">{{ guardadoNoMes }}</ng-container>
-            </button>
-            <div class="kpi-edit" *ngIf="editing.guardadoNoMes">
-              <input [(ngModel)]="editValues.guardadoNoMes" />
-              <button class="btn" (click)="salvarEdicao('guardadoNoMes')">Salvar</button>
-              <button class="btn ghost" (click)="cancelarEdicao('guardadoNoMes')">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <ng-template #valorOculto>••••</ng-template>
 </section>
-
-<ng-template #hiddenSaldo>••••</ng-template>
-<ng-template #hiddenMeta>••••</ng-template>
-<ng-template #hiddenGuardado>••••</ng-template>
-
-
-<!-- <section class="grid">
-  <article class="card">
-    <h3>Fluxo de Caixa Mensal</h3>
-    <div class="chart">Gráfico (placeholder)</div>
-  </article>
-
-  <article class="card">
-    <h3>Gastos por Categoria</h3>
-    <div class="chart">Donut (placeholder)</div>
-  </article>
-</section>
-
-<section class="alert">
-  <span class="warn">⚠️</span>
-  <strong>Você já guardou 80% da meta</strong>
-</section> -->
 
 <app-transacoes
   [transactions]="transactions"
+  [mostrarAcoesEPaginacao]="false"
   (add)="receberTransacaoFilha($event)">
 </app-transacoes>

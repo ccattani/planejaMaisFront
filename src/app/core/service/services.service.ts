@@ -1,10 +1,11 @@
 import { Injectable } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { firstValueFrom } from "rxjs";
 import { RegisterPayload } from "../../shared/models/interfaces/register";
 import { LoginPayload } from "../../shared/models/interfaces/login";
 import { UpdatePayload } from "../../shared/models/interfaces/update";
 import { TransactionPayload } from "../../shared/models/interfaces/transaction";
+import { FiltrosSomatorioLancamentos } from "../../shared/models/interfaces/filtroSomatorio";
 
 @Injectable({
   providedIn: "root",
@@ -87,6 +88,37 @@ export class ServicesService {
 
   deleteExpense(id: string) {
     return firstValueFrom(this.http.delete(`${this.api}/expense/delete/${id}`));
+  }
+
+  getSomatorioLancamentos(filtros?: FiltrosSomatorioLancamentos): Promise<number> {
+    let parametros = new HttpParams();
+
+    if (filtros?.startDate) parametros = parametros.set("startDate", filtros.startDate);
+    if (filtros?.endDate) parametros = parametros.set("endDate", filtros.endDate);
+    if (filtros?.category) parametros = parametros.set("category", filtros.category);
+    if (filtros?.description) parametros = parametros.set("description", filtros.description);
+
+    if (typeof filtros?.startValue === "number") {
+      parametros = parametros.set("startValue", String(filtros.startValue));
+    }
+
+    if (typeof filtros?.endValue === "number") {
+      parametros = parametros.set("endValue", String(filtros.endValue));
+    }
+
+    return firstValueFrom(
+      this.http.get<any>(`${this.api}/operation/allValues`, { params: parametros })
+    ).then((resposta) => {
+      // Ajuste este trecho se o backend retornar outro formato
+      const valor =
+        resposta?.total ??
+        resposta?.value ??
+        resposta?.data ??
+        resposta;
+
+      const numero = typeof valor === "number" ? valor : Number(valor);
+      return isNaN(numero) ? 0 : numero;
+    });
   }
 
 }

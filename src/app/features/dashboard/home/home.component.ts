@@ -1,131 +1,179 @@
-import { Transaction } from './../../../shared/models/interfaces/transaction';
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { TransacoesComponent } from '../transacoes/transacoes.component';
-import { VisibilityService } from '../../../core/service/visibility.service';
-import { ServicesService } from '../../../core/service/services.service';
-import { TransactionService } from '../../../core/service/transaction.service';
+import { Component, OnInit } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+
+import { TransacoesComponent } from "../transacoes/transacoes.component";
+import { VisibilityService } from "../../../core/service/visibility.service";
+import { ServicesService } from "../../../core/service/services.service";
+import { Transaction } from "../../../shared/models/interfaces/transaction";
+
+type ChaveKpi = "saldoTotal" | "metaMensal";
+
+type KpiConfig = {
+  chave: ChaveKpi;
+  titulo: string;
+  icone: string;
+  editavel: boolean;
+};
 
 @Component({
-  selector: 'app-home',
+  selector: "app-home",
   standalone: true,
   imports: [CommonModule, FormsModule, TransacoesComponent],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss'],
+  templateUrl: "./home.component.html",
+  styleUrls: ["./home.component.scss"],
 })
 export class HomeComponent implements OnInit {
-  saldoTotal = 'R$ 3.250';
-  metaMensal = 'R$ 4.000';
-  guardadoNoMes = 'R$ 1.200';
+  saldoTotal = "R$ 0";
+  metaMensal = "R$ 0";
 
-  editing: { saldoTotal: boolean; metaMensal: boolean; guardadoNoMes: boolean } = {
+  kpis: KpiConfig[] = [
+    { chave: "saldoTotal", titulo: "Saldo total", icone: "💳", editavel: false },
+    { chave: "metaMensal", titulo: "Meta de guardar", icone: "🎯", editavel: true },
+  ];
+
+  editing: Record<ChaveKpi, boolean> = {
     saldoTotal: false,
     metaMensal: false,
-    guardadoNoMes: false,
   };
 
-  editValues: { saldoTotal: string; metaMensal: string; guardadoNoMes: string } = {
+  editValues: Record<ChaveKpi, string> = {
     saldoTotal: this.saldoTotal,
     metaMensal: this.metaMensal,
-    guardadoNoMes: this.guardadoNoMes,
   };
 
   transactions: Transaction[] = [];
 
-  editingIndex: number | null = null;
+  private readonly chaveStorageMetaMensal = "planejaMais_metaMensal";
 
-  constructor(public visibility: VisibilityService, private services: ServicesService, private servicoTransacao: TransactionService) {}
+  constructor(
+    public visibility: VisibilityService,
+    private services: ServicesService
+  ) {}
 
   async ngOnInit(): Promise<void> {
+    this.carregarMetaMensalDoStorage();
+    await Promise.all([
+      this.carregarSaldoTotal(),
+      this.carregarUltimasTransacoes(),
+    ]);
+  }
+
+  private async carregarSaldoTotal(): Promise<void> {
     try {
-      const res: any = await this.services.getAllTransactions();
-      const arr = Array.isArray(res) ? res : (res?.data ?? []);
-      const mapped = (arr as any[])
-        .slice(0, 5)
-        .map((transaction) => {
-          const valor = transaction.value ?? 0;
-          const sinal = valor >= 0 ? '+' : '-';
-          const valorFormatado = this.formatarNumeroParaMoeda(Math.abs(valor));
-          const descricao = transaction.description ?? (transaction.desc as string) ?? 'Transação';
-          return { desc: descricao, value: sinal + valorFormatado, numeric: valor };
-        });
-      this.transactions = mapped;
-    } catch (error) {
-      console.error('Erro ao buscar transações', error);
+      const saldoTotalNumero = await this.services.getSomatorioLancamentos();
+      this.saldoTotal = this.formatarMoedaSemSinal(saldoTotalNumero);
+      this.editValues.saldoTotal = this.saldoTotal;
+    } catch (erro) {
+      console.error("Erro ao buscar saldo total (somatório)", erro);
     }
   }
 
-  private converterStringParaNumero(valorStr: string): number {
+  private async carregarUltimasTransacoes(): Promise<void> {
+    try {
+      const resposta: any = await this.services.getAllTransactions();
+      const lista = Array.isArray(resposta) ? resposta : resposta?.data ?? [];
+
+      const ultimasCinco = (lista as any[]).slice(0, 5);
+
+      this.transactions = ultimasCinco.map((item) => {
+        const valor: number = item.value ?? 0;
+        const descricao: string = item.description ?? item.desc ?? "Transação";
+        const id: string | undefined = item.id ?? item._id ?? item.transactionId;
+
+        return {
+          id,
+          desc: descricao,
+          category: item.category,
+          numeric: valor,
+          value: this.formatarMoedaComSinal(valor),
+        } as Transaction;
+      });
+    } catch (erro) {
+      console.error("Erro ao buscar últimas transações", erro);
+    }
+  }
+
+  obterValorKpi(chave: ChaveKpi): string {
+    if (chave === "saldoTotal") return this.saldoTotal;
+    return this.metaMensal;
+  }
+
+  podeEditarKpi(chave: ChaveKpi): boolean {
+    const config = this.kpis.find((kpi) => kpi.chave === chave);
+    return config?.editavel === true;
+  }
+
+  iniciarEdicao(chave: ChaveKpi): void {
+    if (!this.podeEditarKpi(chave)) return;
+    this.editValues[chave] = this.obterValorKpi(chave);
+    this.editing[chave] = true;
+  }
+
+  salvarEdicao(chave: ChaveKpi): void {
+    if (!this.podeEditarKpi(chave)) return;
+
+    if (chave === "metaMensal") {
+      this.metaMensal = this.editValues.metaMensal;
+      localStorage.setItem(this.chaveStorageMetaMensal, this.metaMensal);
+    }
+
+    this.editing[chave] = false;
+  }
+
+  cancelarEdicao(chave: ChaveKpi): void {
+    this.editValues[chave] = this.obterValorKpi(chave);
+    this.editing[chave] = false;
+  }
+
+  private carregarMetaMensalDoStorage(): void {
+    const valorSalvo = localStorage.getItem(this.chaveStorageMetaMensal);
+    if (valorSalvo) {
+      this.metaMensal = valorSalvo;
+      this.editValues.metaMensal = valorSalvo;
+      return;
+    }
+
+    this.metaMensal = "R$ 4.000";
+    this.editValues.metaMensal = this.metaMensal;
+    localStorage.setItem(this.chaveStorageMetaMensal, this.metaMensal);
+  }
+
+  // Recebe do componente de transações quando criou/alterou/excluiu.
+  // Aqui eu faço o mínimo: atualiza lista local e atualiza o saldo local com base no numeric.
+  // Se você editar/excluir, precisa mandar um evento apropriado (ver observação abaixo).
+  receberTransacaoFilha(transacao: Transaction): void {
+    const valorAssinado = typeof transacao.numeric === "number" ? transacao.numeric : 0;
+
+    this.transactions = [transacao, ...this.transactions].slice(0, 5);
+
+    const saldoAtual = this.converterMoedaParaNumero(this.saldoTotal);
+    this.saldoTotal = this.formatarMoedaSemSinal(saldoAtual + valorAssinado);
+    this.editValues.saldoTotal = this.saldoTotal;
+  }
+
+  private converterMoedaParaNumero(valorStr: string): number {
     if (!valorStr) return 0;
-    let stringLimpa = valorStr.replace(/R\$|\s/g, '');
-    stringLimpa = stringLimpa.replace(/\./g, '');
-    stringLimpa = stringLimpa.replace(/,/g, '.');
-    const numero = parseFloat(stringLimpa);
-    return isNaN(numero) ? 0 : numero;
+
+    const negativo = valorStr.includes("-");
+    let valorLimpo = valorStr.replace(/[R$+\-\s]/g, "");
+    valorLimpo = valorLimpo.replace(/\./g, "");
+    valorLimpo = valorLimpo.replace(/,/g, ".");
+
+    const numero = Number(valorLimpo);
+    if (Number.isNaN(numero)) return 0;
+
+    return negativo ? -numero : numero;
   }
 
-  private formatarNumeroParaMoeda(n: number): string {
-    const rounded = Math.round(n);
-    return 'R$ ' + new Intl.NumberFormat('pt-BR').format(rounded);
+  private formatarMoedaSemSinal(valor: number): string {
+    const arredondado = Math.round(valor);
+    return "R$ " + new Intl.NumberFormat("pt-BR").format(arredondado);
   }
 
-  receberTransacaoFilha(transacao: { desc: string; value: string; numeric?: number; index?: number }) {
-    const descricao = transacao.desc || 'Transação';
-    const valorFormatado = transacao.value || '';
-    const efeitoNovo = transacao.numeric ?? -this.converterStringParaNumero(valorFormatado);
-
-    const saldoAtual = this.converterStringParaNumero(this.saldoTotal);
-    const indice = transacao.index ?? this.editingIndex;
-    const efeitoAnterior = (indice === null || indice === undefined) ? 0 : this.converterStringParaNumero(this.transactions[indice].value);
-
-    const saldoAtualizado = saldoAtual + (efeitoNovo - efeitoAnterior);
-    this.saldoTotal = this.formatarNumeroParaMoeda(saldoAtualizado);
-
-    if (indice === null || indice === undefined) {
-      this.transactions = [{ desc: descricao, value: valorFormatado }, ...this.transactions];
-    } else {
-      const updated = [...this.transactions];
-      updated[indice] = { desc: descricao, value: valorFormatado };
-      this.transactions = updated;
-    }
-
-    this.editingIndex = null;
+  private formatarMoedaComSinal(valor: number): string {
+    const arredondado = Math.round(valor);
+    const sinal = arredondado < 0 ? "-" : "+";
+    return sinal + "R$ " + new Intl.NumberFormat("pt-BR").format(Math.abs(arredondado));
   }
-
-  removerTransacao(i: number) {
-    const efeitoAnterior = this.converterStringParaNumero(this.transactions[i].value);
-    const saldoAtual = this.converterStringParaNumero(this.saldoTotal);
-    const saldoAtualizado = saldoAtual - efeitoAnterior;
-    this.saldoTotal = this.formatarNumeroParaMoeda(saldoAtualizado);
-    this.transactions.splice(i, 1);
-  }
-
-  editarTransacao(i: number) {
-    // Solicita ao componente Transacoes que abra o modal em modo edição com os dados da transação
-    const transacao = this.transactions[i];
-    this.servicoTransacao.open({ desc: transacao.desc, value: transacao.value, index: i });
-  }
-
-  iniciarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
-    if (key === 'saldoTotal') this.editValues.saldoTotal = this.saldoTotal;
-    else if (key === 'metaMensal') this.editValues.metaMensal = this.metaMensal;
-    else if (key === 'guardadoNoMes') this.editValues.guardadoNoMes = this.guardadoNoMes;
-    this.editing[key] = true;
-  }
-
-  salvarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
-    if (key === 'saldoTotal') this.saldoTotal = this.editValues.saldoTotal;
-    else if (key === 'metaMensal') this.metaMensal = this.editValues.metaMensal;
-    else if (key === 'guardadoNoMes') this.guardadoNoMes = this.editValues.guardadoNoMes;
-    this.editing[key] = false;
-  }
-
-  cancelarEdicao(key: 'saldoTotal' | 'metaMensal' | 'guardadoNoMes') {
-    if (key === 'saldoTotal') this.editValues.saldoTotal = this.saldoTotal;
-    else if (key === 'metaMensal') this.editValues.metaMensal = this.metaMensal;
-    else if (key === 'guardadoNoMes') this.editValues.guardadoNoMes = this.guardadoNoMes;
-    this.editing[key] = false;
-  }
-
 }
