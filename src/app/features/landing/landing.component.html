@@ -1,0 +1,155 @@
+<div class="lp">
+  <header class="lp__header">
+    <div class="lp__brand">
+      <span class="lp__logo">Planeja<span>+</span></span>
+      <span class="lp__tag">controle simples, decisão rápida</span>
+    </div>
+
+    <nav class="lp__nav">
+      <a class="btn btn--ghost" routerLink="/auth/login">Entrar</a>
+      <a class="btn btn--primary" routerLink="/auth/register">Criar conta</a>
+    </nav>
+  </header>
+
+  <section class="lp__hero">
+    <div class="hero__left">
+      <h1>
+        Seu dinheiro sem bagunça.
+        <span class="grad">Metas, filtros e visão clara</span>.
+      </h1>
+
+      <p class="hero__desc">
+        Registre entradas e saídas, organize por categoria e acompanhe metas
+        mensais/anuais. Tudo em um fluxo simples — sem planilha caótica.
+      </p>
+
+      <div class="hero__cta">
+        <a class="btn btn--primary btn--lg" routerLink="/auth/register"
+          >Começar grátis</a
+        >
+        <a class="btn btn--ghost btn--lg" routerLink="/auth/login"
+          >Já tenho conta</a
+        >
+      </div>
+
+      <div class="hero__kpis">
+        <div class="kpi" *ngFor="let k of kpis">
+          <div class="kpi__v">{{ k.current }}{{ k.suffix }}</div>
+          <div class="kpi__l">{{ k.label }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero__right">
+      <div class="mock">
+        <div class="mock__top">
+          <div class="pill">📅 Jan</div>
+          <div class="pill">Categoria: Todas</div>
+          <div class="pill">Tipo: Todos</div>
+        </div>
+
+        <div class="mock__cards">
+          <div class="card">
+            <div class="card__t">Saldo do mês</div>
+            <div class="card__v">R$ 2.450</div>
+            <div class="card__s">+12% vs mês passado</div>
+          </div>
+          <div class="card">
+            <div class="card__t">Meta (mensal)</div>
+            <div class="card__v">R$ 800</div>
+            <div class="card__s">Progresso 62%</div>
+          </div>
+        </div>
+
+        <div class="mock__list">
+          <div class="row row--in">
+            <span>+ Salário</span>
+            <span>R$ 4.800</span>
+          </div>
+          <div class="row row--out">
+            <span>- Aluguel</span>
+            <span>R$ 1.650</span>
+          </div>
+          <div class="row row--out">
+            <span>- Mercado</span>
+            <span>R$ 520</span>
+          </div>
+          <div class="row row--out">
+            <span>- Transporte</span>
+            <span>R$ 210</span>
+          </div>
+        </div>
+
+        <div class="mock__glow"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lp__benefits">
+    <h2>Feito para o dia a dia, sem fricção</h2>
+    <p class="sub">O básico muito bem feito: registrar, filtrar, decidir.</p>
+
+    <div class="grid">
+      <article class="bcard">
+        <div class="bcard__i">⚡</div>
+        <h3>Rápido</h3>
+        <p>Adicione transações em segundos e veja o impacto na hora.</p>
+      </article>
+
+      <article class="bcard">
+        <div class="bcard__i">🧠</div>
+        <h3>Clareza</h3>
+        <p>Filtros por mês, categoria e tipo para você enxergar padrões.</p>
+      </article>
+
+      <article class="bcard">
+        <div class="bcard__i">🎯</div>
+        <h3>Metas</h3>
+        <p>Metas mensais e anuais para transformar intenção em hábito.</p>
+      </article>
+
+      <article class="bcard">
+        <div class="bcard__i">🔒</div>
+        <h3>Conta</h3>
+        <p>Acesso por login com sessão segura e fluxo simples.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="lp__how">
+    <h2>Como funciona</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step__n">1</div>
+        <div>
+          <div class="step__t">Crie sua conta</div>
+          <div class="step__d">Leva menos de 1 minuto.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step__n">2</div>
+        <div>
+          <div class="step__t">Registre transações</div>
+          <div class="step__d">Entrada/saída, categoria e descrição.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step__n">3</div>
+        <div>
+          <div class="step__t">Acompanhe metas e saldo</div>
+          <div class="step__d">Decida com base em dados, não em chute.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="lp__footer">
+    <span>Planeja+ © {{ currentYear }}</span>
+    <span class="dot">•</span>
+    <a routerLink="/auth/login">Entrar</a>
+    <span class="dot">•</span>
+    <a routerLink="/auth/register">Criar conta</a>
+  </footer>
+</div>
