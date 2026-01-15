@@ -3,31 +3,58 @@
   <aside class="sidebar" [class.sidebar--open]="mobileNavOpen">
     <div class="brand">
       <div class="brand__logo">Planeja<span>+</span></div>
-      <button class="sidebar__close" type="button" (click)="fecharNavMobile()">✕</button>
+      <button class="sidebar__close" type="button" (click)="fecharNavMobile()">
+        ✕
+      </button>
     </div>
 
     <nav class="nav">
-      <a class="nav__item" routerLink="/home" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/home"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">🏠</span>
         <span class="nav__text">Painel</span>
       </a>
 
-      <a class="nav__item" routerLink="/transactions" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/transactions"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">💸</span>
         <span class="nav__text">Transações</span>
       </a>
 
-      <a class="nav__item" routerLink="/goals" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/goals"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">🎯</span>
         <span class="nav__text">Metas</span>
       </a>
 
-      <a class="nav__item" routerLink="/reports" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/reports"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">📊</span>
         <span class="nav__text">Relatórios</span>
       </a>
 
-      <a class="nav__item" routerLink="/profile" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/profile"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">⚙️</span>
         <span class="nav__text">Configurações</span>
       </a>
@@ -36,7 +63,9 @@
     <div class="sidebar__footer">
       <div class="mini-card">
         <div class="mini-card__title">Dica rápida</div>
-        <div class="mini-card__text">Use “Buscar” para filtrar por descrição ou categoria.</div>
+        <div class="mini-card__text">
+          Use “Buscar” para filtrar por descrição ou categoria.
+        </div>
       </div>
     </div>
   </aside>
@@ -74,17 +103,28 @@
         </button>
       </div>
     </header> -->
-  <div class="home__top">
-    <div class="searchbar">
-      <span class="searchbar__icon">🔎</span>
-      <input class="searchbar__input" type="text" placeholder="Buscar..." />
+    <div class="shell__top">
+      <div class="ui-searchbar">
+        <span class="ui-searchbar__icon">🔎</span>
+        <input
+          class="ui-searchbar__input"
+          type="text"
+          placeholder="Buscar..."
+        />
+      </div>
+
+      <button class="ui-icon-pill" title="Atalhos" type="button">⚪</button>
+      <button class="ui-icon-pill" title="Notificações" type="button">
+        🔴
+      </button>
     </div>
 
-    <button class="icon-pill" title="Atalhos">⚪</button>
-    <button class="icon-pill" title="Notificações">🔴</button>
-  </div>
     <!-- OVERLAY MOBILE -->
-    <div class="overlay" *ngIf="mobileNavOpen" (click)="fecharNavMobile()"></div>
+    <div
+      class="overlay"
+      *ngIf="mobileNavOpen"
+      (click)="fecharNavMobile()"
+    ></div>
 
     <!-- CONTENT -->
     <main class="content">

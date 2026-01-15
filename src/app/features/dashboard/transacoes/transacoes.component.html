@@ -10,49 +10,53 @@
     </div>
   </div>
 
-  <article class="card card--list">
-    <header class="card__head">
+  <article class="ui-card ui-card--list">
+    <header class="ui-card__head">
       <div>
-        <div class="card__title">Todas as Transações</div>
-        <div class="card__sub">{{ totalLabel }}</div>
+        <div class="ui-card__title">Todas as Transações</div>
+        <div class="ui-card__sub">{{ totalLabel }}</div>
       </div>
 
-      <div class="card__right">
-        <div class="card__sum">{{ totalValor }}</div>
-        <div class="card__chev">▾</div>
+      <div class="ui-card__right">
+        <div class="ui-card__sum">{{ totalValor }}</div>
+        <div class="ui-card__chev">▾</div>
       </div>
     </header>
 
-    <div class="list" *ngIf="!carregando; else loading">
+    <div class="ui-list" *ngIf="!carregando; else loading">
       <ng-container *ngFor="let tx of txs; trackBy: trackById; let i = index">
-        <div class="list__group" *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel">
+        <div class="ui-list__group" *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel">
           <span>{{ tx.groupLabel }}</span>
         </div>
 
-        <div class="row">
-          <div class="row__left">
-            <div class="row__ico">{{ tx.icon }}</div>
+        <div class="ui-row">
+          <div class="ui-row__left">
+            <div class="ui-row__ico">{{ tx.icon }}</div>
 
-            <div class="row__text">
-              <div class="row__title">
+            <div class="ui-row__text">
+              <div class="ui-row__title">
                 {{ tx.desc }}
-                <span class="tag tag--gray" *ngIf="tx.tags?.[0]">{{ tx.tags[0] }}</span>
+                <span class="ui-tag ui-tag--gray" *ngIf="tx.tags?.[0]">{{ tx.tags[0] }}</span>
               </div>
 
-              <div class="row__tags" *ngIf="(tx.tags?.length ?? 0) > 1">
-                <span class="tag tag--orange" *ngFor="let t of tx.tags.slice(1)">{{ t }}</span>
+              <div class="ui-row__tags" *ngIf="(tx.tags?.length ?? 0) > 1">
+                <span class="ui-tag ui-tag--orange" *ngFor="let t of tx.tags.slice(1)">{{ t }}</span>
               </div>
             </div>
           </div>
 
-          <div class="row__right">
-            <div class="row__value" [class.pos]="(tx.numeric ?? 0) > 0" [class.neg]="(tx.numeric ?? 0) < 0">
+          <div class="ui-row__right">
+            <div
+              class="ui-value"
+              [class.ui-value--pos]="(tx.numeric ?? 0) > 0"
+              [class.ui-value--neg]="(tx.numeric ?? 0) < 0"
+            >
               {{ tx.value }}
             </div>
 
             <div class="row__actions">
-              <button class="btn tiny ghost" (click)="editar(tx)">Editar</button>
-              <button class="btn tiny danger" (click)="excluir(tx)">Excluir</button>
+              <button class="ui-btn ui-btn--tiny ui-btn--ghost" (click)="editar(tx)">Editar</button>
+              <button class="ui-btn ui-btn--tiny ui-btn--danger" (click)="excluir(tx)">Excluir</button>
             </div>
           </div>
         </div>

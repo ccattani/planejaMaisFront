@@ -147,54 +147,55 @@
   <!-- Main grid -->
   <div class="grid">
     <!-- Transactions list card -->
-    <article class="card card--list">
-      <header class="card__head">
+    <article class="ui-card ui-card--list">
+      <header class="ui-card__head">
         <div>
-          <div class="card__title">Últimas Transações</div>
-          <div class="card__sub">{{ totalUltimasLabel }}</div>
+          <div class="ui-card__title">Últimas Transações</div>
+          <div class="ui-card__sub">{{ totalUltimasLabel }}</div>
         </div>
 
-        <div class="card__right">
-          <div class="card__sum">{{ totalUltimasValor }}</div>
-          <div class="card__chev">▾</div>
+        <div class="ui-card__right">
+          <div class="ui-card__sum">{{ totalUltimasValor }}</div>
+          <div class="ui-card__chev">▾</div>
         </div>
       </header>
 
-      <div class="list">
+      <div class="ui-list">
         <ng-container *ngFor="let tx of txs; trackBy: trackById; let i = index">
-          <!-- group header: mostra quando muda -->
           <div
-            class="list__group"
+            class="ui-list__group"
             *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel"
           >
             <span>{{ tx.groupLabel }}</span>
           </div>
 
-          <div class="row">
-            <div class="row__left">
-              <div class="row__ico">{{ tx.icon }}</div>
-              <div class="row__text">
-                <div class="row__title">
+          <div class="ui-row">
+            <div class="ui-row__left">
+              <div class="ui-row__ico">{{ tx.icon }}</div>
+
+              <div class="ui-row__text">
+                <div class="ui-row__title">
                   {{ tx.desc }}
-                  <span class="tag tag--gray" *ngIf="tx.tags[0]"
-                    >{{ tx.tags[0] }}</span
-                  >
+                  <span class="ui-tag ui-tag--gray" *ngIf="tx.tags?.[0]">
+                    {{ tx.tags[0] }}
+                  </span>
                 </div>
 
-                <div class="row__tags" *ngIf="tx.tags.length > 1">
+                <div class="ui-row__tags" *ngIf="(tx.tags?.length ?? 0) > 1">
                   <span
-                    class="tag tag--orange"
+                    class="ui-tag ui-tag--orange"
                     *ngFor="let t of tx.tags.slice(1)"
-                    >{{ t }}</span
                   >
+                    {{ t }}
+                  </span>
                 </div>
               </div>
             </div>
 
             <div
-              class="row__value"
-              [class.pos]="(tx.numeric ?? 0) > 0"
-              [class.neg]="(tx.numeric ?? 0) < 0"
+              class="ui-value"
+              [class.ui-value--pos]="(tx.numeric ?? 0) > 0"
+              [class.ui-value--neg]="(tx.numeric ?? 0) < 0"
             >
               {{ tx.value }}
             </div>
@@ -302,12 +303,15 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn ghost" (click)="fecharModalNovaTransacao()">
+        <button
+          class="ui-btn ui-btn--ghost"
+          (click)="fecharModalNovaTransacao()"
+        >
           Cancelar
         </button>
 
         <button
-          class="btn primary"
+          class="ui-btn ui-btn--primary"
           (click)="salvarTransacao()"
           [disabled]="salvando"
         >
@@ -317,6 +321,6 @@
     </div>
   </div>
   <!-- quando o modal criar/editar, você chama receberTransacaoFilha() pelo evento do seu componente transações
-       Se seu modal está fora da Home (topbar), então você faz via serviço + recarrega ao salvar.
+  Se seu modal está fora da Home (topbar), então você faz via serviço + recarrega ao salvar.
   -->
 </section>
