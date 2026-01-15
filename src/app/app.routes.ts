@@ -1,5 +1,7 @@
 import { Routes } from "@angular/router";
 import { DashboardLayoutComponent } from "./features/dashboard/dashboard-layout/dashboard-layout.component";
+import { authGuard } from "./core/guards/auth.guards";
+
 
 export const routes: Routes = [
   { path: "", redirectTo: "auth/login", pathMatch: "full" },
@@ -26,16 +28,36 @@ export const routes: Routes = [
       ),
   },
 
-{
-  path: "",
-  component: DashboardLayoutComponent,
-  children: [
-    { path: "home", loadComponent: () => import("./features/dashboard/home/home.component").then(m => m.HomeComponent) },
-    { path: "transactions", loadComponent: () => import("./features/dashboard/transacoes/transacoes.component").then(m => m.TransacoesComponent) },
-    // { path: "goals", loadComponent: () => import("./features/dashboard/goals/goals.component").then(m => m.GoalsComponent) },
-    // { path: "reports", loadComponent: () => import("./features/dashboard/reports/reports.component").then(m => m.ReportsComponent) },
-    { path: "profile", loadComponent: () => import("./features/dashboard/profile/profile.component").then(m => m.ProfileComponent) },
-    { path: "", pathMatch: "full", redirectTo: "home" },
-  ],
-}
+  {
+    path: "",
+    component: DashboardLayoutComponent,
+    canMatch: [authGuard],
+    children: [
+      {
+        path: "home",
+        loadComponent: () =>
+          import("./features/dashboard/home/home.component").then(
+            (m) => m.HomeComponent
+          ),
+      },
+      {
+        path: "transactions",
+        loadComponent: () =>
+          import("./features/dashboard/transacoes/transacoes.component").then(
+            (m) => m.TransacoesComponent
+          ),
+      },
+      {
+        path: "profile",
+        loadComponent: () =>
+          import("./features/dashboard/profile/profile.component").then(
+            (m) => m.ProfileComponent
+          ),
+      },
+      { path: "", pathMatch: "full", redirectTo: "home" },
+    ],
+  },
+
+  // opcional: rota 404
+  { path: "**", redirectTo: "auth/login" },
 ];
