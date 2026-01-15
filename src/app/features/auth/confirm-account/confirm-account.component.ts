@@ -9,7 +9,7 @@ import { CommonModule } from '@angular/common';
   selector: 'app-confirm-account',
   standalone: true,
   templateUrl: './confirm-account.component.html',
-  imports: [AuthCardComponent, RouterModule, FormsModule, CommonModule],
+  imports: [RouterModule, FormsModule, CommonModule],
   styleUrl: './confirm-account.component.scss'
 })
 export class ConfirmAccountComponent {

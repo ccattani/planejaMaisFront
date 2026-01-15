@@ -1,56 +1,123 @@
-<div class="app-shell">
+<div class="app-shell" [class.app-shell--nav-open]="mobileNavOpen">
   <!-- SIDEBAR -->
-  <aside class="sidebar" [class.sidebar--open]="mobileNavOpen">
+  <aside
+    class="sidebar"
+    [class.sidebar--open]="mobileNavOpen"
+    aria-label="Navegação"
+  >
     <div class="brand">
       <div class="brand__logo">Planeja<span>+</span></div>
-      <button class="sidebar__close" type="button" (click)="fecharNavMobile()">✕</button>
+
+      <button
+        class="icon-btn sidebar__close"
+        type="button"
+        (click)="fecharNavMobile()"
+        aria-label="Fechar menu"
+      >
+        ✕
+      </button>
     </div>
 
     <nav class="nav">
-      <a class="nav__item" routerLink="/home" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/home"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">🏠</span>
         <span class="nav__text">Painel</span>
       </a>
 
-      <a class="nav__item" routerLink="/transactions" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/transactions"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">💸</span>
         <span class="nav__text">Transações</span>
       </a>
 
-      <a class="nav__item" routerLink="/goals" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/goals"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">🎯</span>
         <span class="nav__text">Metas</span>
       </a>
 
-      <a class="nav__item" routerLink="/reports" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <!-- se /reports ainda não existe, REMOVA esse item pra não virar “link morto” -->
+      <a
+        class="nav__item"
+        routerLink="/reports"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">📊</span>
         <span class="nav__text">Relatórios</span>
       </a>
 
-      <a class="nav__item" routerLink="/profile" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+      <a
+        class="nav__item"
+        routerLink="/profile"
+        routerLinkActive="nav__item--active"
+        (click)="fecharNavMobile()"
+      >
         <span class="nav__icon">⚙️</span>
         <span class="nav__text">Configurações</span>
       </a>
+
+      <button
+        class="nav__item nav__item--danger"
+        type="button"
+        (click)="logout()"
+      >
+        <span class="nav__icon">⎋</span>
+        <span class="nav__text">Sair</span>
+      </button>
     </nav>
 
     <div class="sidebar__footer">
       <div class="mini-card">
         <div class="mini-card__title">Dica rápida</div>
-        <div class="mini-card__text">Use “Buscar” para filtrar por categoria, tipo ou valor.</div>
+        <div class="mini-card__text">
+          Use “Buscar” para filtrar por categoria, tipo ou valor.
+        </div>
       </div>
     </div>
   </aside>
 
+  <!-- OVERLAY MOBILE -->
+  <div
+    class="overlay"
+    *ngIf="mobileNavOpen"
+    (click)="fecharNavMobile()"
+    aria-hidden="true"
+  ></div>
+
   <!-- MAIN -->
   <div class="main">
-    <div class="shell__top">
-      <div class="ui-searchbar ui-searchbar--advanced">
+    <header class="topbar">
+      <button
+        class="icon-btn topbar__menu"
+        type="button"
+        (click)="mobileNavOpen = true"
+        aria-label="Abrir menu"
+      >
+        ☰
+      </button>
+
+      <div class="ui-searchbar ui-searchbar--advanced" role="search">
         <span class="ui-searchbar__icon">🔎</span>
 
         <select
           class="ui-searchbar__select"
           [(ngModel)]="tipoBusca"
           (ngModelChange)="onTipoBuscaChange()"
+          aria-label="Tipo de busca"
         >
           <option value="categoria">Categoria</option>
           <option value="tipo">Tipo</option>
@@ -83,18 +150,23 @@
           />
         </ng-template>
 
-        <button class="ui-searchbar__btn" type="button" (click)="executarBusca()">Buscar</button>
-        <button class="ui-searchbar__btn ui-searchbar__btn--ghost" type="button" (click)="limparFiltros()">Limpar</button>
+        <button
+          class="ui-searchbar__btn"
+          type="button"
+          (click)="executarBusca()"
+        >
+          Buscar
+        </button>
+        <button
+          class="ui-searchbar__btn ui-searchbar__btn--ghost"
+          type="button"
+          (click)="limparFiltros()"
+        >
+          Limpar
+        </button>
       </div>
+    </header>
 
-      <button class="ui-icon-pill" title="Atalhos" type="button">⚪</button>
-      <button class="ui-icon-pill" title="Notificações" type="button">🔴</button>
-    </div>
-
-    <!-- OVERLAY MOBILE -->
-    <div class="overlay" *ngIf="mobileNavOpen" (click)="fecharNavMobile()"></div>
-
-    <!-- CONTENT -->
     <main class="content">
       <router-outlet></router-outlet>
     </main>

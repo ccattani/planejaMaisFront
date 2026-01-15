@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
-import { RouterModule } from "@angular/router";
+import { Router, RouterModule } from "@angular/router";
 
 import { VisibilityService } from "../../../core/service/visibility.service";
 import { TransactionService } from "../../../core/service/transaction.service";
@@ -28,7 +28,8 @@ export class DashboardLayoutComponent {
   constructor(
     public visibility: VisibilityService,
     private transactionService: TransactionService,
-    private filters: FiltersService
+    private filters: FiltersService,
+    private router: Router
   ) {}
 
   alternarNavMobile(): void {
@@ -91,5 +92,17 @@ export class DashboardLayoutComponent {
 
   aplicarMesAtual(): void {
     this.filters.emit({ kind: "mesAtual" });
+  }
+
+  logout(): void {
+    // limpa tudo (você salva token em local OU session)
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // fecha menu mobile se estiver aberto
+    this.mobileNavOpen = false;
+
+    // volta pro início (vai cair no redirect para auth/login)
+    this.router.navigateByUrl("/");
   }
 }

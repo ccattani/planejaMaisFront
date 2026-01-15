@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { AuthCardComponent } from "../components/auth-card/auth-card.component";
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ServicesService } from '../../../core/service/services.service';
@@ -8,12 +7,11 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [AuthCardComponent, RouterModule, FormsModule, CommonModule],
+  imports: [RouterModule, FormsModule, CommonModule],
   templateUrl: './forgot-password.component.html',
-  styleUrls: ['./forgot-password.component.scss']
+  styleUrl: './forgot-password.component.scss',
 })
 export class ForgotPasswordComponent {
-
   email = '';
   loading = false;
   successMsg = '';
@@ -22,25 +20,27 @@ export class ForgotPasswordComponent {
   constructor(private service: ServicesService) {}
 
   async submit() {
-    // reset state
+    if (this.loading) return;
+
     this.successMsg = '';
     this.errorMsg = '';
-    this.loading = true;
 
-    // regra: e-mail vazio nem entra no pipeline
-    if (!this.email.trim()) {
-      this.loading = false;
+    const email = this.email.trim();
+    if (!email) {
       this.errorMsg = 'Informe um e-mail válido.';
       return;
     }
 
-    try {
-      await this.service.getForgottenPassword(this.email);
+    this.loading = true;
 
+    try {
+      await this.service.getForgottenPassword(email);
       this.successMsg = 'Link de recuperação enviado com sucesso.';
-    } catch (error: any) {
-      console.error('[ForgotPassword] Falha na operação:', error);
-      this.errorMsg = error?.error?.message || 'Falha ao enviar o link. Tente novamente.';
+    } catch (err: any) {
+      this.errorMsg =
+        err?.error?.message ||
+        err?.error ||
+        'Falha ao enviar o link. Tente novamente.';
     } finally {
       this.loading = false;
     }

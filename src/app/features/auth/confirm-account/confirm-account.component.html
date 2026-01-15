@@ -1,10 +1,38 @@
-<app-auth-card>
-  <h1 class="logo">Planeja<span>+</span></h1>
-  <h2>Confirmar sua conta</h2>
+<div class="auth-page">
+  <section class="auth-card">
+    <header class="auth-head">
+      <h1 class="logo">Planeja<span>+</span></h1>
+      <p class="subtitle">
+        Confirme sua conta para liberar o acesso ao Planeja+.
+      </p>
+    </header>
 
-  <p>Clique no botão abaixo para confirmar sua conta</p>
+    <div class="content">
+      <p class="text">
+        Clique no botão abaixo para confirmar sua conta.
+      </p>
 
-  <button class="btn-primary" (click)="confirm()">Confirmar</button>
+      <!-- <div class="success" *ngIf="successMsg">
+        {{ successMsg }}
+      </div>
 
-  <a routerLink="/auth/login" class="link">Já tem uma conta? Entrar</a>
-</app-auth-card>
+      <div class="error" *ngIf="errorMsg">
+        {{ errorMsg }}
+      </div> -->
+
+      <button
+        class="btn-primary"
+        (click)="confirm()"
+        [disabled]="loading || user"
+      >
+        <span class="spinner" *ngIf="loading"></span>
+        {{ loading ? 'Confirmando...' : 'Confirmar conta' }}
+      </button>
+
+      <p class="helper">
+        Já tem uma conta?
+        <a routerLink="/auth/login" class="link">Entrar</a>
+      </p>
+    </div>
+  </section>
+</div>

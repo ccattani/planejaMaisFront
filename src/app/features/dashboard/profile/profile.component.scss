@@ -1,120 +1,164 @@
 .profile-card {
-  width: 380px;
-  padding: 32px;
-  border-radius: 16px;
-  background: #0f1620;
-  backdrop-filter: blur(12px);
-  box-shadow: 0 0 12px rgba(0,0,0,0.3);
-  text-align: center;
+  --card: #ffffff;
+  --card-2: #fbfbfd;
+  --stroke: rgba(17, 24, 39, 0.08);
+  --stroke-2: rgba(17, 24, 39, 0.12);
+  --text: #111827;
+  --muted: rgba(17, 24, 39, 0.60);
 
-  h1 {
-    margin-bottom: 1rem;
-    text-align: center;
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: #fff;
-  }
+  --shadow: 0 10px 26px rgba(16, 24, 40, 0.08);
+  --shadow-2: 0 16px 40px rgba(16, 24, 40, 0.12);
 
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+  --accent: #5b6cff;
+  --accent-2: #6be4ff;
 
-    input{
-      width: auto;
-    }
-  }
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 22px;
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
 
-  label {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #9ca3af;
-  }
+/* =========================
+   Title
+   ========================= */
+.profile-card h1 {
+  margin: 0 0 18px;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.2px;
+}
 
-  input {
-    padding: 0.9rem;
-    background: #1b2337;
-    border: 1px solid #2a3550;
-    border-radius: 12px;
-    color: #f3f4f6;
-    transition: 0.2s ease;
+/* =========================
+   Form
+   ========================= */
+.profile-card form {
+  display: grid;
+  gap: 14px;
+}
 
-    &::placeholder {
-      color: #6b7280;
-    }
+.profile-card input {
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--stroke);
+  background: rgba(255,255,255,0.95);
+  padding: 0 14px;
+  outline: none;
+  font-weight: 800;
+  color: rgba(17,24,39,0.88);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
 
-    &:focus {
-      outline: none;
-      border-color: #4f9cff;
-      box-shadow: 0 0 0 3px rgba(79, 156, 255, 0.25);
-    }
+.profile-card input::placeholder {
+  color: rgba(17,24,39,0.35);
+  font-weight: 700;
+}
 
-    &:disabled {
-      background: #111927;
-      color: #6b7280;
-    }
-  }
+.profile-card input:focus {
+  border-color: rgba(91,108,255,0.35);
+  box-shadow: 0 0 0 4px rgba(91,108,255,0.10);
+}
 
-  /* ------------------ Botão primário (Salvar) ------------------ */
-  .btn-primary {
-    background: linear-gradient(90deg, #4ade80 0%, #3b82f6 100%);
-    color: #0f1629;
-    padding: 0.85rem;
-    border: none;
-    border-radius: 14px;
-    font-size: 1rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.15s ease;
-    margin-top: 0.5rem;
+/* =========================
+   Change password link
+   ========================= */
+.profile-card a {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(91,108,255,0.95);
+  text-decoration: none;
+  margin-top: 2px;
+  width: fit-content;
+}
 
-    &:hover {
-      filter: brightness(1.1);
-    }
-  }
+.profile-card a:hover {
+  text-decoration: underline;
+}
 
-  /* ------------------ Link estilo botão leve (Alterar senha) ------------------ */
-  a {
-    text-align: center;
-    color: #60a5fa;
-    font-weight: 600;
-    margin-top: .3rem;
-    text-decoration: none;
-    transition: 0.2s;
+/* =========================
+   Primary button
+   ========================= */
+.btn-primary {
+  height: 46px;
+  margin-top: 10px;
+  border-radius: 14px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 14px;
+  color: #ffffff;
+  background: linear-gradient(90deg, rgba(91,108,255,0.95), rgba(107,228,255,0.85));
+  box-shadow: 0 12px 26px rgba(91,108,255,0.22);
+  transition: transform .12s ease, filter .12s ease;
+}
 
-    &:hover {
-      color: #93c5fd;
-      text-decoration: underline;
-    }
-  }
+.btn-primary:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
 
-  /* ------------------ Botão DELETE (vermelho premium) ------------------ */
-  .btn-danger {
-    background: #ef4444;
-    color: white;
-    padding: 0.85rem;
-    border: none;
-    border-radius: 14px;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: 0.15s ease;
+.btn-primary:active {
+  transform: translateY(0);
+}
 
-    &:hover {
-      background: #dc2626;
-    }
-  }
+/* =========================
+   Danger zone
+   ========================= */
+.btn-danger {
+  width: 100%;
+  margin-top: 18px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  background: rgba(239, 68, 68, 0.10);
+  color: rgba(239, 68, 68, 0.95);
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform .12s ease, filter .12s ease;
+}
 
-  /* Mensagens */
-  .success {
-    text-align: center;
-    color: #4ade80;
-    font-weight: 600;
-  }
+.btn-danger:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
 
-  .error {
-    text-align: center;
-    color: #f87171;
-    font-weight: 600;
+.btn-danger:active {
+  transform: translateY(0);
+}
+
+/* =========================
+   Messages
+   ========================= */
+.success,
+.error {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 13px;
+}
+
+.success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: rgba(21, 128, 61, 0.95);
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.10);
+  border: 1px solid rgba(239, 68, 68, 0.28);
+  color: rgba(185, 28, 28, 0.95);
+}
+
+/* =========================
+   Responsive
+   ========================= */
+@media (max-width: 560px) {
+  .profile-card {
+    padding: 18px;
+    border-radius: 18px;
   }
 }

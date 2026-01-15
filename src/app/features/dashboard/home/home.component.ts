@@ -635,7 +635,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   irParaMetas(): void {
     // ajuste a rota real do seu app
-    this.router.navigate(["/dashboard/goals"]);
+    this.router.navigate(["/goals"]);
   }
 
   private carregarMetasCriadas(): void {

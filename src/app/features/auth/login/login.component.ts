@@ -2,23 +2,22 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AuthCardComponent } from "../components/auth-card/auth-card.component";
 import { ServicesService } from '../../../core/service/services.service';
 import { LoginPayload } from '../../../shared/models/interfaces/login';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [AuthCardComponent, RouterModule, CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.scss'
+  styleUrl: './login.component.scss',
 })
 export class LoginComponent {
 
   form: LoginPayload = {
     user: '',
     passwordHash: '',
-    remember: false
+    remember: false,
   };
 
   loading = false;
@@ -29,42 +28,51 @@ export class LoginComponent {
     private router: Router
   ) {}
 
-async submit() {
-  this.loading = true;
-  this.error = '';
+  async submit() {
+    if (this.loading) return;
 
-  try {
-    let token = await this.service.login(this.form);
+    this.loading = true;
+    this.error = '';
 
-    token = token.replace(/"/g, "");
+    try {
+      let token = await this.service.login(this.form);
+      token = this.normalizeToken(token);
 
-    if (this.form.remember) {
-      localStorage.setItem('token', token);
-    } else {
-      sessionStorage.setItem('token', token);
-    }
+      const storage = this.form.remember ? localStorage : sessionStorage;
+      storage.setItem('token', token);
 
-    this.router.navigate(['/home']);
+      this.router.navigate(['/home']);
+    } catch (err: any) {
+      const backendMsg = err?.error;
 
-  } catch (err: any) {
-
-    if (err.error === 'Conta não verificada') {
-
-      try {
-        await this.service.sendAuthEmail(this.form.user);
-        this.error = 'Sua conta ainda não foi ativada. Enviamos um e-mail para você confirmar.';
-      } catch {
-        this.error = 'Falha ao enviar o e-mail de ativação.';
+      if (backendMsg === 'Conta não verificada') {
+        try {
+          await this.service.sendAuthEmail(this.form.user);
+          this.error =
+            'Sua conta ainda não foi ativada. Enviamos um e-mail para você confirmar.';
+        } catch {
+          this.error = 'Falha ao enviar o e-mail de ativação.';
+        }
+        return;
       }
 
-      return;
+      this.error = 'Usuário ou senha inválidos';
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  private normalizeToken(raw: any): string {
+    if (!raw) return '';
+
+    if (typeof raw === 'string') {
+      return raw.replace(/"/g, '').trim();
     }
 
-    this.error = 'Usuário ou senha inválidos';
-  } finally {
-    this.loading = false;
+    if (typeof raw === 'object' && typeof raw.token === 'string') {
+      return raw.token.replace(/"/g, '').trim();
+    }
+
+    return String(raw).replace(/"/g, '').trim();
   }
-}
-
-
 }

@@ -1,43 +1,96 @@
-<app-auth-card>
-  <h1 class="logo">Planeja<span>+</span></h1>
-  <h2>Criar conta</h2>
+<div class="auth-page">
+  <section class="auth-card">
+    <header class="auth-head">
+      <h1 class="logo">Planeja<span>+</span></h1>
+      <p class="subtitle">Crie sua conta para acompanhar saldo, transações e metas.</p>
+    </header>
 
-  <form (ngSubmit)="submit()">
-    <input placeholder="Nome" [(ngModel)]="form.name" name="name" required />
+    <form (ngSubmit)="submit()" class="form">
+      <div class="field">
+        <label class="label" for="name">Nome</label>
+        <input
+          id="name"
+          class="input"
+          type="text"
+          placeholder="Seu nome"
+          [(ngModel)]="form.name"
+          name="name"
+          required
+          autocomplete="name"
+        />
+      </div>
 
-    <input placeholder="Usuário" [(ngModel)]="form.user" name="user" required />
+      <div class="field">
+        <label class="label" for="user">Usuário</label>
+        <input
+          id="user"
+          class="input"
+          type="text"
+          placeholder="Escolha um usuário"
+          [(ngModel)]="form.user"
+          name="user"
+          required
+          autocomplete="username"
+        />
+      </div>
 
-    <input
-      type="password"
-      placeholder="Senha"
-      [(ngModel)]="form.password"
-      name="password"
-      required
-    />
+      <div class="field">
+        <label class="label" for="email">E-mail</label>
+        <input
+          id="email"
+          class="input"
+          type="email"
+          placeholder="seuemail@exemplo.com"
+          [(ngModel)]="form.email"
+          name="email"
+          required
+          autocomplete="email"
+        />
+      </div>
 
-    <input
-      type="email"
-      placeholder="E-mail"
-      [(ngModel)]="form.email"
-      name="email"
-      required
-    />
+      <div class="field">
+        <label class="label" for="birthday">Data de nascimento</label>
+        <input
+          id="birthday"
+          class="input"
+          type="date"
+          [(ngModel)]="form.birthday"
+          name="birthday"
+          required
+        />
+      </div>
 
-    <input
-      type="date"
-      placeholder="Data de nascimento"
-      [(ngModel)]="form.birthday"
-      name="birthday"
-      required
-    />
+      <div class="field">
+        <label class="label" for="password">Senha</label>
+        <input
+          id="password"
+          class="input"
+          type="password"
+          placeholder="Crie uma senha"
+          [(ngModel)]="form.password"
+          name="password"
+          required
+          autocomplete="new-password"
+        />
+      </div>
 
-    <button class="btn-primary" [disabled]="loading">
-      {{ loading ? 'Criando...' : 'Criar conta' }}
-    </button>
+      <div class="success" *ngIf="successMsg">
+        {{ successMsg }}
+      </div>
 
-    <a routerLink="/auth/login" class="link">Voltar para o login</a>
-  </form>
+      <div class="error" *ngIf="errorMsg">
+        {{ errorMsg }}
+      </div>
 
-    <p class="success" *ngIf="successMsg">{{ successMsg }}</p>
-  <p class="error" *ngIf="errorMsg">{{ errorMsg }}</p>
-</app-auth-card>
+      <button class="btn-primary" type="submit" [disabled]="loading">
+        <span class="spinner" *ngIf="loading" aria-hidden="true"></span>
+        {{ loading ? 'Criando...' : 'Criar conta' }}
+      </button>
+
+      <p class="helper">
+        Já tem conta?
+        <a routerLink="/auth/login" class="link">Voltar para o login</a>
+      </p>
+    </form>
+  </section>
+</div>
