@@ -1,48 +1,322 @@
-<section class="kpis">
-  <div class="kpi-card" *ngFor="let kpi of kpis">
-    <div class="kpi-row">
-      <div class="kpi-left">
-        <span class="kpi-ico" aria-hidden="true">{{ kpi.icone }}</span>
+<section class="home">
+  <!-- Top controls -->
+  <!-- <div class="home__top">
+    <div class="searchbar">
+      <span class="searchbar__icon">🔎</span>
+      <input class="searchbar__input" placeholder="Buscar..." />
+    </div>
 
-        <div class="kpi-text">
-          <div class="kpi-label">{{ kpi.titulo }}</div>
+    <button class="icon-pill" title="Atalhos">⚪</button>
+    <button class="icon-pill" title="Notificações">🔴</button>
+  </div> -->
 
-          <div class="kpi-value">
-            <!-- EDIÇÃO -->
-            <div class="kpi-edit" *ngIf="editing[kpi.chave]; else visualizacao">
-              <input [(ngModel)]="editValues[kpi.chave]" />
-              <button type="button" class="btn" (click)="salvarEdicao(kpi.chave)">Salvar</button>
-              <button type="button" class="btn ghost" (click)="cancelarEdicao(kpi.chave)">Cancelar</button>
-            </div>
+  <!-- Filters row -->
+  <div class="filters">
+    <button class="pill pill--soft">
+      <span class="pill__icon">📅</span>
+      {{ mesLabel }}
+      <span class="pill__chev">▾</span>
+    </button>
 
-            <!-- VISUALIZAÇÃO -->
-            <ng-template #visualizacao>
-              <ng-container *ngIf="(visibility.showBalances$ | async); else valorOculto">
-                <button
-                  *ngIf="podeEditarKpi(kpi.chave); else valorSomenteLeitura"
-                  type="button"
-                  class="kpi-button"
-                  (click)="iniciarEdicao(kpi.chave)"
-                >
-                  {{ obterValorKpi(kpi.chave) }}
-                </button>
+    <button class="pill">
+      Categoria: {{ filtroCategoria }} <span class="pill__x">×</span>
+    </button>
+    <button class="pill">
+      Tipo: {{ filtroTipo }} <span class="pill__x">×</span>
+    </button>
+    <button class="pill">
+      Valor: {{ filtroValor }} <span class="pill__x">×</span>
+    </button>
+    <button class="pill">Custom <span class="pill__chev">▾</span></button>
+  </div>
 
-                <ng-template #valorSomenteLeitura>
-                  <div class="kpi-static">{{ obterValorKpi(kpi.chave) }}</div>
-                </ng-template>
-              </ng-container>
+  <!-- KPI cards -->
+  <div class="kpi-grid">
+    <!-- Saldo -->
+    <article class="kpi-card">
+      <div class="kpi-card__row">
+        <div class="kpi-card__left">
+          <div class="kpi-ico kpi-ico--blue">💳</div>
+          <div class="kpi-card__text">
+            <div class="kpi-label">Saldo total</div>
+
+            <ng-container
+              *ngIf="(visibility.showBalances$ | async); else hiddenSaldo"
+            >
+              <div class="kpi-value">{{ saldoTotal }}</div>
+            </ng-container>
+
+            <ng-template #hiddenSaldo>
+              <div class="kpi-value">••••</div>
             </ng-template>
           </div>
         </div>
+
+        <div class="kpi-card__chev">›</div>
+      </div>
+
+      <div class="kpi-bar">
+        <div
+          class="kpi-bar__fill"
+          [style.width.%]="clampPercent(metaProgress)"
+        ></div>
+      </div>
+    </article>
+
+    <!-- Meta -->
+    <article class="kpi-card">
+      <div class="kpi-card__row">
+        <div class="kpi-card__left">
+          <div class="kpi-ico kpi-ico--pink">🎯</div>
+
+          <div class="kpi-card__text">
+            <div class="kpi-label">Meta de guardar</div>
+
+            <!-- edição -->
+            <div *ngIf="editing.metaMensal; else metaView" class="kpi-edit">
+              <input [(ngModel)]="editValues.metaMensal" class="kpi-input" />
+              <button class="kpi-btn" (click)="salvarEdicao('metaMensal')">
+                Salvar
+              </button>
+              <button
+                class="kpi-btn ghost"
+                (click)="cancelarEdicao('metaMensal')"
+              >
+                Cancelar
+              </button>
+            </div>
+
+            <ng-template #metaView>
+              <button class="kpi-button" (click)="iniciarEdicao('metaMensal')">
+                <ng-container
+                  *ngIf="(visibility.showBalances$ | async); else hiddenMeta"
+                >
+                  <span class="kpi-value">{{ metaMensal }}</span>
+                </ng-container>
+                <ng-template #hiddenMeta>
+                  <span class="kpi-value">••••</span>
+                </ng-template>
+              </button>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="kpi-card__chev">›</div>
+      </div>
+
+      <div class="kpi-bar">
+        <div class="kpi-bar__fill" [style.width.%]="metaProgress"></div>
+      </div>
+
+      <div class="kpi-foot">
+        <span class="kpi-foot__muted">Falta</span>
+        <span class="kpi-foot__val">{{ metaRestante }}</span>
+      </div>
+    </article>
+
+    <!-- Gasto no mês -->
+    <article class="kpi-card">
+      <div class="kpi-card__row">
+        <div class="kpi-card__left">
+          <div class="kpi-ico kpi-ico--orange">🛩️</div>
+
+          <div class="kpi-card__text">
+            <div class="kpi-label">Gasto no mês</div>
+
+            <ng-container
+              *ngIf="(visibility.showBalances$ | async); else hiddenGasto"
+            >
+              <div class="kpi-value kpi-value--neg">{{ gastoNoMes }}</div>
+              <div class="kpi-sub">
+                <span class="kpi-sub__up">▲ 9%</span>
+                <span class="kpi-sub__muted">que Dezembro</span>
+              </div>
+            </ng-container>
+
+            <ng-template #hiddenGasto>
+              <div class="kpi-value">••••</div>
+            </ng-template>
+          </div>
+        </div>
+
+        <div class="kpi-card__chev">›</div>
+      </div>
+    </article>
+  </div>
+
+  <!-- Main grid -->
+  <div class="grid">
+    <!-- Transactions list card -->
+    <article class="card card--list">
+      <header class="card__head">
+        <div>
+          <div class="card__title">Últimas Transações</div>
+          <div class="card__sub">{{ totalUltimasLabel }}</div>
+        </div>
+
+        <div class="card__right">
+          <div class="card__sum">{{ totalUltimasValor }}</div>
+          <div class="card__chev">▾</div>
+        </div>
+      </header>
+
+      <div class="list">
+        <ng-container *ngFor="let tx of txs; trackBy: trackById; let i = index">
+          <!-- group header: mostra quando muda -->
+          <div
+            class="list__group"
+            *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel"
+          >
+            <span>{{ tx.groupLabel }}</span>
+          </div>
+
+          <div class="row">
+            <div class="row__left">
+              <div class="row__ico">{{ tx.icon }}</div>
+              <div class="row__text">
+                <div class="row__title">
+                  {{ tx.desc }}
+                  <span class="tag tag--gray" *ngIf="tx.tags[0]"
+                    >{{ tx.tags[0] }}</span
+                  >
+                </div>
+
+                <div class="row__tags" *ngIf="tx.tags.length > 1">
+                  <span
+                    class="tag tag--orange"
+                    *ngFor="let t of tx.tags.slice(1)"
+                    >{{ t }}</span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="row__value"
+              [class.pos]="(tx.numeric ?? 0) > 0"
+              [class.neg]="(tx.numeric ?? 0) < 0"
+            >
+              {{ tx.value }}
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </article>
+
+    <!-- Insights column -->
+    <!-- <aside class="insights">
+      <article class="card insight">
+        <header class="card__head card__head--tight">
+          <div class="card__title">Insight</div>
+          <div class="card__chev">›</div>
+        </header>
+
+        <div class="insight__body">
+          <div class="insight__ico">📊</div>
+          <div class="insight__text">
+            <div>Você gastou mais com</div>
+            <div class="insight__strong">{{ insightTopCategoria }}</div>
+            <div class="insight__muted">({{ insightTopDelta }})</div>
+          </div>
+
+          <button class="soft-btn">Ver categorias</button>
+        </div>
+      </article>
+
+      <article class="card insight">
+        <header class="card__head card__head--tight">
+          <div class="card__title">Insight</div>
+        </header>
+
+        <div class="mini">
+          <div class="mini__left">
+            <div class="mini__ico">🧠</div>
+            <div class="mini__text">
+              <div class="mini__muted">Maior gasto</div>
+              <div class="mini__strong">Mercado</div>
+            </div>
+          </div>
+
+          <div class="mini__right">
+            <div class="mini__val">-R$ 250</div>
+            <div class="mini__bar"><span></span></div>
+          </div>
+        </div>
+
+        <div class="goal">
+          <div class="goal__ico">🎯</div>
+          <div class="goal__text">
+            <div class="goal__strong">Resta {{ metaRestante }}</div>
+            <div class="goal__muted">para bater a meta</div>
+          </div>
+        </div>
+      </article>
+    </aside> -->
+  </div>
+
+  <!-- Floating add button -->
+  <!-- Floating add button -->
+  <button
+    class="fab"
+    (click)="abrirNovaTransacao()"
+    aria-label="Nova transação"
+  >
+    +
+  </button>
+
+  <!-- MODAL NOVA TRANSAÇÃO (fica no Home) -->
+  <div class="modal-overlay" *ngIf="modalNovaTransacao">
+    <div class="modal">
+      <div class="modal__head">
+        <h3>{{ modoEdicao ? "Editar Transação" : "Nova Transação" }}</h3>
+        <button
+          class="icon-x"
+          (click)="fecharModalNovaTransacao()"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+      </div>
+
+      <label>Descrição</label>
+      <input [(ngModel)]="form.desc" placeholder="Ex: Padaria" />
+
+      <label>Categoria</label>
+      <input [(ngModel)]="form.category" placeholder="Ex: Alimentação" />
+
+      <div class="field-inline">
+        <label>Valor</label>
+        <div class="field-inline-content">
+          <input
+            [(ngModel)]="form.value"
+            placeholder="Ex: 230 ou 230,50"
+            class="value-input"
+            inputmode="decimal"
+          />
+
+          <select [(ngModel)]="form.type" class="type-select">
+            <option value="entrada">Entrada (+)</option>
+            <option value="saida">Saída (-)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn ghost" (click)="fecharModalNovaTransacao()">
+          Cancelar
+        </button>
+
+        <button
+          class="btn primary"
+          (click)="salvarTransacao()"
+          [disabled]="salvando"
+        >
+          {{ salvando ? "Salvando..." : "Salvar" }}
+        </button>
       </div>
     </div>
   </div>
-
-  <ng-template #valorOculto>••••</ng-template>
+  <!-- quando o modal criar/editar, você chama receberTransacaoFilha() pelo evento do seu componente transações
+       Se seu modal está fora da Home (topbar), então você faz via serviço + recarrega ao salvar.
+  -->
 </section>
-
-<app-transacoes
-  [transactions]="transactions"
-  [mostrarAcoesEPaginacao]="false"
-  (add)="receberTransacaoFilha($event)">
-</app-transacoes>

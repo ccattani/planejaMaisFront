@@ -26,32 +26,16 @@ export const routes: Routes = [
       ),
   },
 
-  {
-    path: "",
-    component: DashboardLayoutComponent,
-    children: [
-      {
-        path: "home",
-        loadComponent: () =>
-          import("./features/dashboard/home/home.component").then(
-            (m) => m.HomeComponent
-          ),
-      },
-      {
-        path: "profile",
-        loadComponent: () =>
-          import("./features/dashboard/profile/profile.component").then(
-            (m) => m.ProfileComponent
-          ),
-      },
-
-      {
-        path: "transactions",
-        loadComponent: () =>
-          import("./features/dashboard/transacoes/transacoes.component").then(
-            (m) => m.TransacoesComponent
-          ),
-      },
-    ],
-  },
+{
+  path: "",
+  component: DashboardLayoutComponent,
+  children: [
+    { path: "home", loadComponent: () => import("./features/dashboard/home/home.component").then(m => m.HomeComponent) },
+    { path: "transactions", loadComponent: () => import("./features/dashboard/transacoes/transacoes.component").then(m => m.TransacoesComponent) },
+    // { path: "goals", loadComponent: () => import("./features/dashboard/goals/goals.component").then(m => m.GoalsComponent) },
+    // { path: "reports", loadComponent: () => import("./features/dashboard/reports/reports.component").then(m => m.ReportsComponent) },
+    { path: "profile", loadComponent: () => import("./features/dashboard/profile/profile.component").then(m => m.ProfileComponent) },
+    { path: "", pathMatch: "full", redirectTo: "home" },
+  ],
+}
 ];

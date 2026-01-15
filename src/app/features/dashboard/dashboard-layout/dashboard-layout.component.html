@@ -1,28 +1,70 @@
-<div class="shell">
-  <aside class="sidebar" [class.open]="mobileNavOpen">
-    <div class="brand">Planeja<span>+</span></div>
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" [class.sidebar--open]="mobileNavOpen">
+    <div class="brand">
+      <div class="brand__logo">Planeja<span>+</span></div>
+      <button class="sidebar__close" type="button" (click)="fecharNavMobile()">✕</button>
+    </div>
+
     <nav class="nav">
-      <a class="nav-item" routerLink="/home" routerLinkActive="active" (click)="fecharNavMobile()">Painel de controle</a>
-      <a class="nav-item" routerLink="/transactions" routerLinkActive="active" (click)="fecharNavMobile()">Transações</a>
-      <a class="nav-item" routerLink="/goals" routerLinkActive="active" (click)="fecharNavMobile()">Metas</a>
-      <a class="nav-item" routerLink="/reports" routerLinkActive="active" (click)="fecharNavMobile()">Relatórios</a>
-      <a class="nav-item" routerLink="/profile" routerLinkActive="active" (click)="fecharNavMobile()">Configurações</a>
+      <a class="nav__item" routerLink="/home" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+        <span class="nav__icon">🏠</span>
+        <span class="nav__text">Painel</span>
+      </a>
+
+      <a class="nav__item" routerLink="/transactions" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+        <span class="nav__icon">💸</span>
+        <span class="nav__text">Transações</span>
+      </a>
+
+      <a class="nav__item" routerLink="/goals" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+        <span class="nav__icon">🎯</span>
+        <span class="nav__text">Metas</span>
+      </a>
+
+      <a class="nav__item" routerLink="/reports" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+        <span class="nav__icon">📊</span>
+        <span class="nav__text">Relatórios</span>
+      </a>
+
+      <a class="nav__item" routerLink="/profile" routerLinkActive="nav__item--active" (click)="fecharNavMobile()">
+        <span class="nav__icon">⚙️</span>
+        <span class="nav__text">Configurações</span>
+      </a>
     </nav>
+
+    <div class="sidebar__footer">
+      <div class="mini-card">
+        <div class="mini-card__title">Dica rápida</div>
+        <div class="mini-card__text">Use “Buscar” para filtrar por descrição ou categoria.</div>
+      </div>
+    </div>
   </aside>
 
-  <main class="main">
-    <header class="topbar">
-      <button class="hamburger" aria-label="Abrir menu" (click)="alternarNavMobile()">☰</button>
+  <!-- MAIN -->
+  <div class="main">
+    <!-- TOPBAR -->
+    <!-- <header class="topbar">
+      <button class="icon-button" type="button" aria-label="Abrir menu" (click)="alternarNavMobile()">☰</button>
+
       <div class="search">
-        <span class="search-ico">🔎</span>
-        <input placeholder="Buscar..." />
+        <span class="search__icon">🔎</span>
+        <input
+          class="search__input"
+          placeholder="Buscar lançamentos..."
+          [(ngModel)]="textoBusca"
+          (keyup.enter)="executarBusca()"
+        />
+        <button class="search__action" type="button" (click)="executarBusca()">Buscar</button>
       </div>
 
-      <div class="actions">
-        <button class="btn ghost" (click)="abrirTransacao()">+ Nova transação</button>
-        <button class="btn primary">Criar meta</button>
+      <div class="topbar__actions">
+        <button class="chip" type="button" (click)="abrirTransacao()">+ Nova transação</button>
+        <button class="chip chip--primary" type="button" routerLink="/goals">Criar meta</button>
+
         <button
-          class="btn ghost visibility-toggle"
+          class="icon-button"
+          type="button"
           (click)="visibility.toggle()"
           [attr.aria-pressed]="(visibility.showBalances$ | async)"
           [title]="(visibility.showBalances$ | async) ? 'Ocultar valores' : 'Mostrar valores'"
@@ -31,12 +73,22 @@
           <span *ngIf="!(visibility.showBalances$ | async)">🙈</span>
         </button>
       </div>
-    </header>
+    </header> -->
+  <div class="home__top">
+    <div class="searchbar">
+      <span class="searchbar__icon">🔎</span>
+      <input class="searchbar__input" type="text" placeholder="Buscar..." />
+    </div>
 
-    <div class="mobile-nav-overlay" *ngIf="mobileNavOpen" (click)="fecharNavMobile()"></div>
+    <button class="icon-pill" title="Atalhos">⚪</button>
+    <button class="icon-pill" title="Notificações">🔴</button>
+  </div>
+    <!-- OVERLAY MOBILE -->
+    <div class="overlay" *ngIf="mobileNavOpen" (click)="fecharNavMobile()"></div>
 
-    <section class="content">
+    <!-- CONTENT -->
+    <main class="content">
       <router-outlet></router-outlet>
-    </section>
-  </main>
+    </main>
+  </div>
 </div>

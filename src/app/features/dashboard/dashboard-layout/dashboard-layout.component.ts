@@ -1,42 +1,43 @@
-import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { TransactionService } from '../../../core/service/transaction.service';
-import { VisibilityService } from '../../../core/service/visibility.service';
+import { Component } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule } from "@angular/forms";
+import { RouterModule } from "@angular/router";
+import { VisibilityService } from "../../../core/service/visibility.service";
+import { TransactionService } from "../../../core/service/transaction.service";
 
 @Component({
-  selector: 'app-dashboard-layout',
+  selector: "app-dashboard-layout",
   standalone: true,
-  imports: [CommonModule, RouterModule],
-  templateUrl: './dashboard-layout.component.html',
-  styleUrls: ['./dashboard-layout.component.scss'],
+  imports: [CommonModule, FormsModule, RouterModule],
+  templateUrl: "./dashboard-layout.component.html",
+  styleUrls: ["./dashboard-layout.component.scss"],
 })
 export class DashboardLayoutComponent {
-  menu = [
-    { label: 'Dashboard', path: '/home' },
-    { label: 'Transações', path: '/transactions' },
-    { label: 'Metas', path: '/goals' },
-    { label: 'Relatórios', path: '/reports' },
-    { label: 'Configurações', path: '/profile' },
-  ];
-
-  constructor(private servicoTransacao: TransactionService, public visibility: VisibilityService) {}
-
-  abrirTransacao() {
-    this.servicoTransacao.open();
-  }
-
   mobileNavOpen = false;
+  textoBusca = "";
 
-  alternarNavMobile() {
+  constructor(
+    public visibility: VisibilityService,
+    private transactionService: TransactionService
+  ) {}
+
+  alternarNavMobile(): void {
     this.mobileNavOpen = !this.mobileNavOpen;
   }
 
-  fecharNavMobile() {
+  fecharNavMobile(): void {
     this.mobileNavOpen = false;
   }
 
-  alternarVisibilidade() {
-    this.visibility.toggle();
+  abrirTransacao(): void {
+    this.transactionService.open();
+  }
+
+  executarBusca(): void {
+    // Aqui você decide como quer distribuir a busca.
+    // O mais simples: emitir o texto num service (BehaviorSubject)
+    // e a tela de transações escuta e chama a API.
+    // Por enquanto, deixa vazio pra não bagunçar seu fluxo.
+    // console.log("Buscar:", this.textoBusca);
   }
 }
