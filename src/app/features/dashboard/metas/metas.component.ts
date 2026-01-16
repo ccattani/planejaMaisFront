@@ -255,8 +255,8 @@ export class MetasComponent implements OnInit {
     this.saving = true;
 
     try {
-      // se backend NÃO aceita title, não mande
       const payloadForApi: any = {
+        title: payloadOrError.title,
         month: payloadOrError.month,
         year: payloadOrError.year,
         goal: payloadOrError.goal,
@@ -274,10 +274,9 @@ export class MetasComponent implements OnInit {
         goal: created.goal ?? payloadOrError.goal,
         updatedAt: created.updatedAt ?? payloadOrError.updatedAt,
         user: created.user,
-        title: payloadOrError.title, // local
+        title: payloadOrError.title,
       };
 
-      // salva título local associado ao período
       const key = this.goalKey(newItem);
       this.goalTitles[key] = payloadOrError.title;
       this.saveTitles();
