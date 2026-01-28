@@ -298,9 +298,6 @@
         [class.is-invalid]="isInvalidTitle()"
         placeholder="Ex: Reserva, Viagem, Meta do ano..."
       />
-      <small class="hint"
-        >Obrigatório. (Por enquanto fica salvo no app, não no backend.)</small
-      >
     </div>
 
     <div class="rowform">
@@ -323,7 +320,6 @@
           Anual
         </button>
       </div>
-      <small class="hint">Anual = month 0. Mensal = 1..12 (sem 01, 02).</small>
     </div>
 
     <div class="rowgrid">
@@ -365,7 +361,6 @@
         [class.is-invalid]="isInvalidGoal()"
         placeholder="Ex: 4000 ou -500"
       />
-      <small class="hint">Pode ser negativo. Não use sinal de “+”.</small>
     </div>
 
     <div class="error" *ngIf="errorMsg">{{ errorMsg }}</div>
