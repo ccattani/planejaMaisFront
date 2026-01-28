@@ -2,7 +2,9 @@
   <section class="auth-card">
     <header class="auth-head">
       <h1 class="logo">Planeja<span>+</span></h1>
-      <p class="subtitle">Acesse sua conta para acompanhar saldo, transações e metas.</p>
+      <p class="subtitle">
+        Acesse sua conta para acompanhar saldo, transações e metas.
+      </p>
     </header>
 
     <form (ngSubmit)="submit()" class="form">
@@ -34,7 +36,11 @@
         />
       </div>
 
-      <div class="row">
+      <div class="error" *ngIf="error" role="alert" aria-live="polite">
+        {{ error }}
+      </div>
+
+      <div class="row  flex align-items-center justify-content-between">
         <label class="remember">
           <input type="checkbox" [(ngModel)]="form.remember" name="remember" />
           <span>Lembrar de mim</span>
