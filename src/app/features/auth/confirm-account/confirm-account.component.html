@@ -23,7 +23,7 @@
       <button
         class="btn-primary"
         (click)="confirm()"
-        [disabled]="loading || user"
+        [disabled]="loading"
       >
         <span class="spinner" *ngIf="loading"></span>
         {{ loading ? 'Confirmando...' : 'Confirmar conta' }}
