@@ -12,14 +12,21 @@
   --accent: #5b6cff;
   --accent-2: #6be4ff;
 
-  max-width: 520px;
+  /* ✅ responsivo real */
+  width: min(520px, 100%);
+  max-width: 100%;
   margin: 0 auto;
+
   padding: 22px;
   background: var(--card);
   border: 1px solid var(--stroke);
   border-radius: 22px;
   box-shadow: var(--shadow);
   color: var(--text);
+
+  /* ✅ evita overflow de inputs/textos */
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* =========================
@@ -30,6 +37,9 @@
   font-size: 22px;
   font-weight: 900;
   letter-spacing: -0.2px;
+
+  min-width: 0;
+  word-break: break-word;
 }
 
 /* =========================
@@ -38,6 +48,8 @@
 .profile-card form {
   display: grid;
   gap: 14px;
+
+  min-width: 0;
 }
 
 .profile-card input {
@@ -50,6 +62,12 @@
   font-weight: 800;
   color: rgba(17,24,39,0.88);
   transition: border-color .15s ease, box-shadow .15s ease;
+
+  /* ✅ sempre ocupa a largura disponível */
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .profile-card input::placeholder {
@@ -71,7 +89,11 @@
   color: rgba(91,108,255,0.95);
   text-decoration: none;
   margin-top: 2px;
+
+  /* ✅ não estoura em telas pequenas */
   width: fit-content;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .profile-card a:hover {
@@ -93,6 +115,10 @@
   background: linear-gradient(90deg, rgba(91,108,255,0.95), rgba(107,228,255,0.85));
   box-shadow: 0 12px 26px rgba(91,108,255,0.22);
   transition: transform .12s ease, filter .12s ease;
+
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .btn-primary:hover {
@@ -118,6 +144,8 @@
   font-weight: 900;
   cursor: pointer;
   transition: transform .12s ease, filter .12s ease;
+
+  box-sizing: border-box;
 }
 
 .btn-danger:hover {
@@ -139,6 +167,10 @@
   border-radius: 14px;
   font-weight: 900;
   font-size: 13px;
+
+  /* ✅ quebra texto longo */
+  overflow-wrap: anywhere;
+  box-sizing: border-box;
 }
 
 .success {
@@ -160,5 +192,38 @@
   .profile-card {
     padding: 18px;
     border-radius: 18px;
+  }
+
+  .profile-card h1 {
+    font-size: 20px;
+    margin-bottom: 14px;
+  }
+}
+
+/* ✅ mobile pequeno: reduz padding e garante toque confortável */
+@media (max-width: 420px) {
+  .profile-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .profile-card input {
+    height: 46px; /* melhor pra toque */
+  }
+
+  .btn-primary,
+  .btn-danger {
+    height: 46px;
+  }
+}
+
+/* ✅ ultra pequeno: evita “apertar” demais */
+@media (max-width: 360px) {
+  .profile-card {
+    padding: 12px;
+  }
+
+  .profile-card h1 {
+    font-size: 19px;
   }
 }

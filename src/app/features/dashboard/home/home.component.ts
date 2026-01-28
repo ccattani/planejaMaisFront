@@ -14,8 +14,6 @@ import {
 import { Transaction } from "../../../shared/models/interfaces/transaction";
 import { Router } from "@angular/router";
 
-// IMPORT DO SEU MODAL (você vai criar no shared)
-// ajuste o caminho conforme a pasta que você escolher no shared
 import {
   TxModalComponent,
   TxModalValue,
@@ -31,10 +29,9 @@ type UiTx = Transaction & {
 type TipoTx = "entrada" | "saida";
 type RangeValor = { min?: number; max?: number };
 
-// evento emitido pelo <app-tx-modal (saved)="onTxSaved($event)">
 type TxSavedEvent = {
   mode: "create" | "edit";
-  tx: Transaction; // precisa ter pelo menos: id?, desc, category?, numeric, value
+  tx: Transaction;
   dateISO?: string;
 };
 
@@ -87,20 +84,18 @@ export class HomeComponent implements OnInit, OnDestroy {
   filtroValores: RangeValor[] = [];
 
   // ====== KPIs ======
-  saldoTotal = "R$ 0";
-  gastoNoMes = "R$ 0";
+  saldoTotal = "R$ 0,00";
+  gastoNoMes = "R$ 0,00";
 
   // ====== LISTA ======
   txsAll: UiTx[] = [];
   txs: UiTx[] = [];
 
   totalUltimasLabel = "Total transações: 0";
-  totalUltimasValor = "+R$ 0";
+  totalUltimasValor = "+R$ 0,00";
 
-  // ====== META (barra do saldo) ======
   metaProgress = 0;
 
-  // ====== METAS CRIADAS ======
   GOALS_KEY = "planeja_goals_v1";
   metasCriadas = 0;
 
@@ -121,11 +116,14 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.definirFiltroMesAtual();
 
-    await Promise.all([this.carregarSaldoTotal(), this.carregarTransacoes()]);
+    await Promise.all([
+      this.carregarSaldoTotal(),
+      this.carregarTransacoes(),
+      this.carregarMetasCriadas(),
+    ]);
 
     this.aplicarFiltros();
     this.recalcularDashLocal();
-    this.carregarMetasCriadas();
   }
 
   ngOnDestroy(): void {
@@ -133,9 +131,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  // =========================
-  // PATCHES VINDOS DO DASHBOARD
-  // =========================
   private aplicarPatch(patch: FilterPatch): void {
     switch (patch.kind) {
       case "categoria":
@@ -224,9 +219,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     else this.filtroValores.push({ min, max });
   }
 
-  // =========================
-  // FILTROS (UI local)
-  // =========================
   categoriaAtiva(cat: string): boolean {
     return this.filtroCategorias.includes(cat);
   }
@@ -368,17 +360,15 @@ export class HomeComponent implements OnInit, OnDestroy {
       });
     }
 
-    // home: corta
-    this.txs = lista.slice(0, 12);
+    this.txs = lista.slice(0, 10);
 
-    // header baseado no TOTAL FILTRADO
     this.totalUltimasLabel = `Total transações: ${lista.length}`;
     const total = lista.reduce((acc, t) => acc + (t.numeric ?? 0), 0);
     this.totalUltimasValor = this.formatarMoedaComSinal(total);
   }
 
   // =========================
-  // MODAL (AGORA É COMPONENTE SHARED)
+  // MODAL (SHARED)
   // =========================
   abrirNovaTransacao(): void {
     if (!this.txModal) return;
@@ -394,7 +384,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     const signed = v.type === "saida" ? -valorNum : valorNum;
 
-    // monta payload do backend (mesmo padrão que você já usa no salvarTransacao antigo)
     const agora = new Date().toISOString();
     const payload = {
       description: desc,
@@ -404,13 +393,9 @@ export class HomeComponent implements OnInit, OnDestroy {
       updatedAt: agora,
     };
 
-    // this.salvando = true;
-
     try {
-      // ✅ CHAMA API CREATE
       const res: any = await this.services.createExpense(payload);
 
-      // tenta extrair id de qualquer formato
       const id = String(
         res?.id ??
           res?._id ??
@@ -420,7 +405,6 @@ export class HomeComponent implements OnInit, OnDestroy {
           ""
       );
 
-      // cria tx local com id retornado
       const tx: Transaction = {
         id: id || undefined,
         desc,
@@ -431,10 +415,8 @@ export class HomeComponent implements OnInit, OnDestroy {
 
       const ui = this.toUiTx(tx, agora);
 
-      // adiciona no topo
       this.txsAll = [ui, ...this.txsAll];
 
-      // atualiza saldo local
       const saldoAtual = this.converterMoedaParaNumero(this.saldoTotal);
       this.saldoTotal = this.formatarMoedaSemSinal(saldoAtual + signed);
 
@@ -442,8 +424,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.recalcularDashLocal();
     } catch (e) {
       console.error("Erro ao criar transação", e);
-    } finally {
-      // this.salvando = false;
     }
   }
 
@@ -528,10 +508,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       return acc + (n < 0 ? Math.abs(n) : 0);
     }, 0);
 
+    // agora fica tipo: "-R$ 1.234,56"
     this.gastoNoMes = "-" + this.formatarMoedaSemSinal(gastos);
-
-    // metaProgress agora só usa “saldoTotal” como referência (sem meta mensal)
-    // Se você quiser uma barra diferente aqui, você define.
     this.metaProgress = 0;
   }
 
@@ -608,17 +586,27 @@ export class HomeComponent implements OnInit, OnDestroy {
     return negativo ? -n : n;
   }
 
+  // =========================
+  // FORMATAÇÃO (IGUAL METAS): 2 casas, vírgula, R$
+  // =========================
+  private formatBRL(value: number): string {
+    const safe = Number.isFinite(value) ? value : 0;
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(safe);
+  }
+
   private formatarMoedaSemSinal(valor: number): string {
-    const arred = Math.round(valor);
-    return "R$ " + new Intl.NumberFormat("pt-BR").format(arred);
+    return this.formatBRL(valor);
   }
 
   private formatarMoedaComSinal(valor: number): string {
-    const arred = Math.round(valor);
-    const sinal = arred < 0 ? "-" : "+";
-    return (
-      sinal + "R$ " + new Intl.NumberFormat("pt-BR").format(Math.abs(arred))
-    );
+    const safe = Number.isFinite(valor) ? valor : 0;
+    const sinal = safe < 0 ? "-" : "+";
+    return sinal + this.formatBRL(Math.abs(safe));
   }
 
   trackById(_: number, item: UiTx): string {
@@ -626,7 +614,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   // =========================
-  // METAS CRIADAS
+  // METAS CRIADAS (API)
   // =========================
   get metasBarPercent(): number {
     const max = 10;
@@ -634,16 +622,16 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   irParaMetas(): void {
-    // ajuste a rota real do seu app
     this.router.navigate(["/goals"]);
   }
 
-  private carregarMetasCriadas(): void {
+  private async carregarMetasCriadas(): Promise<void> {
     try {
-      const raw = localStorage.getItem(this.GOALS_KEY);
-      const list = raw ? JSON.parse(raw) : [];
+      const res: any = await this.services.getMyGoals();
+      const list = Array.isArray(res) ? res : res?.data ?? res?.goals ?? [];
       this.metasCriadas = Array.isArray(list) ? list.length : 0;
-    } catch {
+    } catch (e) {
+      console.error("Erro ao buscar metas (count)", e);
       this.metasCriadas = 0;
     }
   }

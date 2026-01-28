@@ -1,6 +1,7 @@
 /* =========================
    Planeja+ Dashboard Layout
    Mantém o HTML, muda só o visual
+   RESPONSIVO (mobile/tablet/notebook/desktop)
    ========================= */
 
 :host {
@@ -29,11 +30,16 @@
 
   min-height: 100vh;
   background: var(--bg);
+  color: var(--text);
+
   display: grid;
   grid-template-columns: 290px 1fr;
   gap: 18px;
+
   padding: 18px;
-  color: var(--text);
+
+  /* ✅ evita “pulo” quando rola scrollbar no desktop */
+  scrollbar-gutter: stable both-edges;
 }
 
 /* =========================
@@ -47,6 +53,9 @@
   padding: 18px;
   position: relative;
   overflow: hidden;
+
+  /* ✅ em telas menores, sidebar vira “card” fixo */
+  height: 100%;
 }
 
 .sidebar::before {
@@ -169,6 +178,9 @@
   padding: 16px;
   position: relative;
   overflow: hidden;
+
+  /* ✅ evita overflow horizontal por grids internos */
+  min-width: 0;
 }
 
 .main::before {
@@ -189,6 +201,9 @@
   align-items: center;
   gap: 12px;
   padding: 10px 10px 14px;
+
+  /* ✅ em telas pequenas, não deixa nada estourar */
+  min-width: 0;
 }
 
 /* Botões circulares da direita */
@@ -207,7 +222,7 @@
 .ui-icon-pill:active { transform: translateY(0); }
 
 /* =========================
-   SEARCHBAR + FILTERS UI (seu bloco ui-searchbar--advanced)
+   SEARCHBAR + FILTERS UI (ui-searchbar--advanced)
    ========================= */
 .ui-searchbar {
   display: flex;
@@ -218,6 +233,9 @@
   border-radius: 18px;
   padding: 10px 12px;
   box-shadow: 0 8px 18px rgba(16,24,40,0.08);
+
+  /* ✅ NÃO deixar “quebrar” o layout em telas pequenas */
+  min-width: 0;
 }
 
 .ui-searchbar__icon {
@@ -236,6 +254,9 @@
   outline: none;
   padding: 0 12px;
   transition: box-shadow .15s ease, border-color .15s ease;
+
+  /* ✅ essencial pra não estourar flex */
+  min-width: 0;
 }
 
 .ui-searchbar__select {
@@ -246,7 +267,6 @@
 
 .ui-searchbar__input {
   flex: 1;
-  min-width: 0;
 }
 
 .ui-searchbar__input--sm {
@@ -270,6 +290,7 @@
   background: linear-gradient(90deg, rgba(91,108,255,0.95), rgba(107,228,255,0.85));
   transition: transform .12s ease, filter .12s ease, opacity .12s ease;
   box-shadow: 0 10px 22px rgba(91,108,255,0.20);
+  white-space: nowrap;
 }
 
 .ui-searchbar__btn:hover { transform: translateY(-1px); filter: brightness(1.02); }
@@ -292,6 +313,9 @@
    ========================= */
 .content {
   padding: 6px 10px 10px;
+
+  /* ✅ previne scroll horizontal por grid filhos */
+  min-width: 0;
 }
 
 /* =========================
@@ -306,7 +330,7 @@
 }
 
 /* =========================
-   RESPONSIVE
+   RESPONSIVE — TABLET / NOTEBOOK
    ========================= */
 @media (max-width: 1024px) {
   .topbar__menu {
@@ -318,6 +342,7 @@
   .app-shell {
     grid-template-columns: 1fr;
     padding: 12px;
+    gap: 12px;
   }
 
   .sidebar {
@@ -325,8 +350,9 @@
     top: 12px;
     left: 12px;
     bottom: 12px;
-    width: 290px;
+    width: min(290px, calc(100vw - 24px));
     z-index: 40;
+
     transform: translateX(-110%);
     transition: transform .18s ease;
   }
@@ -350,28 +376,116 @@
     backdrop-filter: blur(2px);
   }
 
+  .main {
+    padding: 14px;
+  }
+
   .shell__top {
     grid-template-columns: 1fr auto auto;
+    padding: 10px 8px 12px;
+  }
+
+  .ui-icon-pill {
+    width: 42px;
+    height: 42px;
   }
 }
 
 @media (max-width: 640px) {
-  .ui-searchbar {
-    flex-wrap: wrap;
+  /* Topbar vira coluna (menu em cima, searchbar embaixo) */
+  .topbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .topbar__menu {
+    align-self: flex-start;
+  }
+
+  /* ✅ SEARCHBAR: força grid (mata o flex e mata a sobreposição) */
+  .topbar .ui-searchbar.ui-searchbar--advanced {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "select select"
+      "input  input"
+      "min    max"
+      "buscar limpar";
     gap: 8px;
+
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+
+    padding: 10px;
+    border-radius: 16px;
   }
 
-  .ui-searchbar__select {
-    min-width: 120px;
+  /* some o ícone no mobile */
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__icon {
+    display: none !important;
   }
 
-  .ui-searchbar__input--sm {
+  /* Select */
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__select {
+    grid-area: select;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Input principal (texto) */
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__input:not(.ui-searchbar__input--sm) {
+    grid-area: input;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Inputs Min/Max (quando aparecem) */
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__input--sm:nth-of-type(1) {
+    grid-area: min;
+    width: 100%;
+    min-width: 0;
     max-width: none;
-    flex: 1;
   }
 
-  .ui-searchbar__btn,
-  .ui-searchbar__btn--ghost {
-    flex: 1;
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__input--sm:nth-of-type(2) {
+    grid-area: max;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+  }
+
+  /* Botões */
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__btn {
+    grid-area: buscar;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  .topbar .ui-searchbar.ui-searchbar--advanced .ui-searchbar__btn--ghost {
+    grid-area: limpar;
+    width: 100%;
+    white-space: nowrap;
+  }
+
+  /* segurança: impede overflow interno */
+  .topbar .ui-searchbar.ui-searchbar--advanced * {
+    box-sizing: border-box;
+  }
+}
+
+@media (max-width: 380px) {
+  /* Em telas minúsculas, botões em 1 coluna */
+  .topbar .ui-searchbar.ui-searchbar--advanced {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "select"
+      "input"
+      "min"
+      "max"
+      "buscar"
+      "limpar" !important;
   }
 }

@@ -19,6 +19,9 @@
 
   position: relative;
   color: var(--text);
+
+  /* ✅ base responsiva */
+  min-width: 0;
 }
 
 /* =========================
@@ -29,6 +32,9 @@
   flex-wrap: wrap;
   gap: 10px;
   padding: 8px 4px 14px;
+
+  /* ✅ evita “estouro” em telas pequenas */
+  min-width: 0;
 }
 
 .pill {
@@ -46,6 +52,9 @@
   font-weight: 700;
   letter-spacing: 0.1px;
   transition: transform .12s ease, filter .12s ease, border-color .12s ease, background .12s ease;
+
+  /* ✅ melhora “quebra” em telas menores */
+  max-width: 100%;
 }
 
 .pill:hover {
@@ -101,6 +110,9 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   padding: 6px 4px 14px;
+
+  /* ✅ previne overflow horizontal */
+  min-width: 0;
 }
 
 .kpi-card {
@@ -110,6 +122,9 @@
   box-shadow: var(--shadow);
   padding: 14px 14px 12px;
   transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+
+  /* ✅ cards não estouram o grid */
+  min-width: 0;
 }
 
 .kpi-card:hover {
@@ -123,6 +138,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 }
 
 .kpi-card__left {
@@ -147,6 +163,12 @@
   font-size: 30px;
   font-weight: 900;
   letter-spacing: -0.3px;
+
+  /* ✅ evita quebrar layout com números longos */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .kpi-value--neg {
@@ -159,6 +181,9 @@
   gap: 8px;
   margin-top: 6px;
   font-size: 13px;
+
+  /* ✅ deixa quebrar se precisar */
+  flex-wrap: wrap;
 }
 
 .kpi-sub__up {
@@ -175,6 +200,7 @@
   opacity: 0.40;
   font-size: 20px;
   font-weight: 900;
+  flex: 0 0 auto;
 }
 
 .kpi-ico {
@@ -187,6 +213,8 @@
   border: 1px solid var(--stroke);
   background: rgba(255,255,255,0.85);
   box-shadow: 0 10px 18px rgba(16,24,40,0.06);
+
+  flex: 0 0 auto;
 }
 
 .kpi-ico--blue {
@@ -212,6 +240,9 @@
   color: inherit;
   display: inline-flex;
   align-items: baseline;
+
+  /* ✅ acessibilidade/UX */
+  min-width: 0;
 }
 
 .kpi-bar {
@@ -236,6 +267,8 @@
   grid-template-columns: 1fr;
   gap: 14px;
   padding: 0 4px 90px; /* espaço pro FAB */
+
+  min-width: 0;
 }
 
 .ui-card {
@@ -244,6 +277,8 @@
   border-radius: 22px;
   box-shadow: var(--shadow);
   overflow: hidden;
+
+  min-width: 0;
 }
 
 .ui-card__head {
@@ -254,6 +289,8 @@
   padding: 16px 16px 12px;
   background: var(--card-2);
   border-bottom: 1px solid var(--stroke);
+
+  min-width: 0;
 }
 
 .ui-card__title {
@@ -275,15 +312,20 @@
   gap: 10px;
   color: rgba(17,24,39,0.70);
   font-weight: 900;
+
+  /* ✅ não deixar estourar */
+  min-width: 0;
 }
 
 .ui-card__sum {
   font-size: 18px;
+  white-space: nowrap;
 }
 
 .ui-card__chev {
   opacity: 0.45;
   font-size: 18px;
+  flex: 0 0 auto;
 }
 
 /* list */
@@ -308,6 +350,8 @@
   gap: 14px;
   padding: 14px 16px;
   border-bottom: 1px solid rgba(17,24,39,0.06);
+
+  min-width: 0;
 }
 
 .ui-row:last-child {
@@ -318,7 +362,10 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
+  /* ✅ permite truncar textos */
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .ui-row__ico {
@@ -331,10 +378,13 @@
   display: grid;
   place-items: center;
   font-size: 18px;
+
+  flex: 0 0 auto;
 }
 
 .ui-row__text {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .ui-row__title {
@@ -344,9 +394,11 @@
   font-weight: 900;
   letter-spacing: 0.1px;
   color: rgba(17,24,39,0.86);
+
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .ui-row__tags {
@@ -354,6 +406,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 /* tags */
@@ -366,6 +419,8 @@
   font-size: 12px;
   font-weight: 800;
   border: 1px solid rgba(17,24,39,0.08);
+
+  max-width: 100%;
 }
 
 .ui-tag--gray {
@@ -385,6 +440,9 @@
   font-size: 18px;
   letter-spacing: -0.2px;
   color: rgba(17,24,39,0.82);
+
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .ui-value--pos {
@@ -428,13 +486,25 @@
   }
 }
 
+/* ✅ tablet/phones: melhora densidade e evita apertos */
 @media (max-width: 720px) {
   .filters {
+    gap: 8px;
+    padding-bottom: 12px;
+  }
+
+  .pill {
+    height: 40px;
+    padding: 0 12px;
     gap: 8px;
   }
 
   .kpi-grid {
     grid-template-columns: 1fr;
+  }
+
+  .kpi-value {
+    font-size: 28px;
   }
 
   .ui-card__head {
@@ -446,5 +516,68 @@
   .ui-card__right {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .ui-row {
+    padding: 12px 14px;
+  }
+
+  .ui-value {
+    font-size: 16px;
+  }
+
+  .fab {
+    right: 18px;
+    bottom: 18px;
+    width: 54px;
+    height: 54px;
+  }
+}
+
+/* ✅ mobile pequeno: empilha valor abaixo do texto (senão estoura) */
+@media (max-width: 420px) {
+  .ui-row {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .ui-row__left {
+    align-items: flex-start;
+  }
+
+  .ui-row__ico {
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
+  }
+
+  .ui-row__title {
+    white-space: nowrap;
+  }
+
+  .ui-value {
+    margin-left: auto;
+    font-size: 15px;
+  }
+
+  /* ✅ pills ocupam largura melhor */
+  .pill {
+    flex: 1 1 auto;
+    justify-content: space-between;
+  }
+}
+
+/* ✅ ultra pequeno: botões e textos mais compactos */
+@media (max-width: 360px) {
+  .kpi-value {
+    font-size: 26px;
+  }
+
+  .ui-card__title {
+    font-size: 18px;
+  }
+
+  .ui-card__sum {
+    font-size: 16px;
   }
 }

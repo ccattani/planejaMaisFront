@@ -14,7 +14,11 @@
     <div class="ui-list" *ngIf="!carregando; else loading">
       <ng-container *ngIf="txs.length; else empty">
         <ng-container *ngFor="let tx of txs; trackBy: trackById; let i = index">
-          <div class="ui-list__group" *ngIf="i === 0 || txs[i - 1].groupLabel !== tx.groupLabel">
+          <!-- ✅ group header (não quebra quando você paginar) -->
+          <div
+            class="ui-list__group"
+            *ngIf="i === 0 || getPrevGroupLabel(i) !== tx.groupLabel"
+          >
             <span>{{ tx.groupLabel }}</span>
           </div>
 
@@ -25,11 +29,17 @@
               <div class="ui-row__text">
                 <div class="ui-row__title">
                   {{ tx.desc }}
-                  <span class="ui-tag ui-tag--gray" *ngIf="tx.tags?.[0]">{{ tx.tags[0] }}</span>
+                  <span class="ui-tag ui-tag--gray" *ngIf="tx.tags?.[0]">{{
+                    tx.tags[0]
+                  }}</span>
                 </div>
 
                 <div class="ui-row__tags" *ngIf="(tx.tags?.length ?? 0) > 1">
-                  <span class="ui-tag ui-tag--orange" *ngFor="let t of tx.tags.slice(1)">{{ t }}</span>
+                  <span
+                    class="ui-tag ui-tag--orange"
+                    *ngFor="let t of tx.tags.slice(1)"
+                    >{{ t }}</span
+                  >
                 </div>
               </div>
             </div>
@@ -44,8 +54,20 @@
               </div>
 
               <div class="row__actions">
-                <button class="ui-btn ui-btn--tiny ui-btn--ghost" type="button" (click)="editar(tx)">Editar</button>
-                <button class="ui-btn ui-btn--tiny ui-btn--danger" type="button" (click)="excluir(tx)">Excluir</button>
+                <button
+                  class="ui-btn ui-btn--tiny ui-btn--ghost"
+                  type="button"
+                  (click)="editar(tx)"
+                >
+                  Editar
+                </button>
+                <button
+                  class="ui-btn ui-btn--tiny ui-btn--danger"
+                  type="button"
+                  (click)="excluir(tx)"
+                >
+                  Excluir
+                </button>
               </div>
             </div>
           </div>
@@ -53,15 +75,25 @@
       </ng-container>
 
       <ng-template #empty>
-        <div class="empty">
-          Nenhuma transação encontrada com os filtros atuais.
-        </div>
+        <div class="empty">Nenhuma transação encontrada com os filtros atuais.</div>
       </ng-template>
     </div>
 
     <ng-template #loading>
       <div class="loading">Carregando...</div>
     </ng-template>
+
+    <!-- ✅ Paginação Angular Material -->
+    <mat-paginator
+      *ngIf="!carregando && totalFiltrado > 0"
+      [length]="totalFiltrado"
+      [pageIndex]="pageIndex"
+      [pageSize]="pageSize"
+      [pageSizeOptions]="pageSizeOptions"
+      [showFirstLastButtons]="true"
+      (page)="onPage($event)"
+    >
+    </mat-paginator>
   </article>
 
   <!-- ✅ Modal shared -->

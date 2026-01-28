@@ -7,7 +7,11 @@
   backdrop-filter: blur(2px);
   display: grid;
   place-items: center;
-  padding: 16px;
+
+  /* ✅ evita cortar em telas pequenas + respeita safe area (iPhone) */
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow: auto;
 }
 
 /* Modal container */
@@ -19,6 +23,15 @@
   box-shadow: 0 22px 60px rgba(16, 24, 40, 0.18);
   padding: 16px;
   color: #111827;
+
+  /* ✅ responsivo real: não estoura altura e rola por dentro */
+  max-height: min(720px, calc(100vh - 32px));
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+
+  /* ✅ fixa quebra de layout quando tem texto grande */
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* Header */
@@ -30,6 +43,9 @@
   padding: 6px 6px 12px;
   border-bottom: 1px solid rgba(17, 24, 39, 0.08);
   margin-bottom: 12px;
+
+  /* ✅ em telas pequenas, quebra sem esmagar */
+  flex-wrap: wrap;
 }
 
 .modal__head h3 {
@@ -38,6 +54,10 @@
   font-weight: 900;
   letter-spacing: -0.2px;
   color: rgba(17, 24, 39, 0.92);
+
+  /* ✅ evita estouro */
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 /* Close button */
@@ -50,6 +70,9 @@
   cursor: pointer;
   color: rgba(17, 24, 39, 0.70);
   transition: transform .12s ease, filter .12s ease, background .12s ease;
+
+  /* ✅ área de toque melhor */
+  touch-action: manipulation;
 }
 
 .icon-x:hover { filter: brightness(1.03); transform: translateY(-1px); }
@@ -60,6 +83,9 @@
   display: grid;
   gap: 8px;
   padding: 10px 6px;
+  margin-bottom: 0 !important;
+
+  min-width: 0;
 }
 
 .field label {
@@ -78,6 +104,10 @@
   outline: none;
   color: rgba(17, 24, 39, 0.88);
   transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .field input::placeholder {
@@ -97,6 +127,8 @@
   grid-template-columns: 1fr 160px;
   gap: 10px;
   align-items: center;
+
+  min-width: 0;
 }
 
 .value-input {
@@ -117,7 +149,6 @@
 
 small.error {
   font-size: 12px;
-  font-weight: 800;
   color: rgba(210, 38, 38, 0.90);
   margin-top: -4px;
 }
@@ -130,6 +161,9 @@ small.error {
   padding: 14px 6px 4px;
   border-top: 1px solid rgba(17, 24, 39, 0.08);
   margin-top: 8px;
+
+  /* ✅ quebra bonita se apertar */
+  flex-wrap: wrap;
 }
 
 /* Buttons */
@@ -141,6 +175,9 @@ small.error {
   cursor: pointer;
   border: 0;
   transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+
+  touch-action: manipulation;
+  white-space: nowrap;
 }
 
 .ui-btn:disabled {
@@ -171,6 +208,9 @@ small.error {
   .modal {
     border-radius: 18px;
     padding: 14px;
+
+    /* ✅ mais espaço útil em celular */
+    max-height: calc(100vh - 24px);
   }
 
   .field-inline-content {
@@ -179,6 +219,7 @@ small.error {
 
   .modal-actions {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .ui-btn {

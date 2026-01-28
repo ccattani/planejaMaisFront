@@ -226,3 +226,102 @@
 .ui-searchbar__input--sm {
   max-width: 110px;
 }
+
+/* =========================
+   FIX MOBILE - ui-searchbar advanced (sem sobreposição)
+   Porque o global força height:56px + flex.
+   ========================= */
+@media (max-width: 640px) {
+  .ui-searchbar.ui-searchbar--advanced {
+    height: auto !important;          /* <- mata o 56px */
+    min-height: unset !important;
+    padding: 10px !important;
+
+    display: grid !important;         /* <- mata flex */
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "select select"
+      "input  input"
+      "min    max"
+      "buscar limpar";
+    gap: 8px !important;
+
+    align-items: stretch !important;
+  }
+
+  /* ícone some no mobile */
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__icon {
+    display: none !important;
+  }
+
+  /* garante que nada tente “ficar pequenininho” e estoure */
+  .ui-searchbar.ui-searchbar--advanced > * {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__select {
+    grid-area: select;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fff;
+  }
+
+  /* input texto */
+  .ui-searchbar.ui-searchbar--advanced
+    .ui-searchbar__input:not(.ui-searchbar__input--sm) {
+    grid-area: input;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fff;
+  }
+
+  /* min/max (quando existem) */
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__input--sm {
+    max-width: none !important;       /* <- mata o max-width:110px */
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: #fff;
+  }
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__input--sm:nth-of-type(1) { grid-area: min; }
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__input--sm:nth-of-type(2) { grid-area: max; }
+
+  /* botões */
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__btn {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__btn:not(.ui-searchbar__btn--ghost) {
+    grid-area: buscar;
+    background: #3b82f6;
+    border-color: transparent;
+    color: #fff;
+  }
+  .ui-searchbar.ui-searchbar--advanced .ui-searchbar__btn--ghost {
+    grid-area: limpar;
+    background: #fff;
+    color: var(--text);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 380px) {
+  .ui-searchbar.ui-searchbar--advanced {
+    grid-template-columns: 1fr !important;
+    grid-template-areas:
+      "select"
+      "input"
+      "min"
+      "max"
+      "buscar"
+      "limpar" !important;
+  }
+}
+

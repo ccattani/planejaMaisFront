@@ -18,6 +18,11 @@
   --accent-2: #6be4ff;
 
   color: var(--text);
+
+  /* ✅ base responsiva */
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 /* =========================
@@ -29,6 +34,8 @@
   justify-content: space-between;
   gap: 14px;
   padding: 8px 6px 14px;
+
+  min-width: 0;
 }
 
 .page-head h2 {
@@ -36,6 +43,9 @@
   font-size: 24px;
   font-weight: 900;
   letter-spacing: -0.2px;
+
+  min-width: 0;
+  word-break: break-word;
 }
 
 .muted {
@@ -43,12 +53,15 @@
   color: var(--muted);
   font-weight: 800;
   font-size: 13px;
+
+  overflow-wrap: anywhere;
 }
 
 .head-right {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .sum {
@@ -59,6 +72,12 @@
   padding: 10px 14px;
   font-weight: 900;
   letter-spacing: -0.2px;
+
+  /* ✅ evita estourar */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* =========================
@@ -70,11 +89,15 @@
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
+
+  width: 100%;
+  min-width: 0;
 }
 
 /* list */
 .ui-list {
   padding: 0;
+  min-width: 0;
 }
 
 /* group header */
@@ -86,6 +109,8 @@
   background: rgba(17,24,39,0.03);
   border-top: 1px solid rgba(17,24,39,0.05);
   border-bottom: 1px solid rgba(17,24,39,0.05);
+
+  min-width: 0;
 }
 
 /* row */
@@ -96,6 +121,8 @@
   gap: 14px;
   padding: 14px 16px;
   border-bottom: 1px solid rgba(17,24,39,0.06);
+
+  min-width: 0;
 }
 
 .ui-row:last-child {
@@ -107,6 +134,7 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .ui-row__ico {
@@ -119,10 +147,13 @@
   display: grid;
   place-items: center;
   font-size: 18px;
+
+  flex: 0 0 auto;
 }
 
 .ui-row__text {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .ui-row__title {
@@ -132,9 +163,13 @@
   font-weight: 900;
   letter-spacing: 0.1px;
   color: rgba(17,24,39,0.86);
-  white-space: nowrap;
+
+  /* ✅ em vez de uma linha fixa, deixa quebrar quando precisar */
+  white-space: normal;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  min-width: 0;
 }
 
 .ui-row__tags {
@@ -142,6 +177,8 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+
+  min-width: 0;
 }
 
 /* right area */
@@ -149,6 +186,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .ui-value {
@@ -156,8 +196,11 @@
   font-size: 18px;
   letter-spacing: -0.2px;
   color: rgba(17,24,39,0.82);
-  min-width: 110px;
+  min-width: 130px;
   text-align: right;
+
+  /* ✅ evita quebrar número no meio */
+  white-space: nowrap;
 }
 
 .ui-value--pos {
@@ -178,6 +221,8 @@
   font-size: 12px;
   font-weight: 800;
   border: 1px solid rgba(17,24,39,0.08);
+
+  max-width: 100%;
 }
 
 .ui-tag--gray {
@@ -200,6 +245,8 @@
   opacity: 0.0;
   transform: translateY(2px);
   transition: opacity .15s ease, transform .15s ease;
+
+  flex: 0 0 auto;
 }
 
 .ui-row:hover .row__actions {
@@ -216,6 +263,8 @@
   cursor: pointer;
   border: 0;
   transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+
+  white-space: nowrap;
 }
 
 .ui-btn:disabled {
@@ -269,6 +318,8 @@
   font-weight: 800;
   background: var(--card-2);
   border-top: 1px solid rgba(17,24,39,0.06);
+
+  overflow-wrap: anywhere;
 }
 
 .loading {
@@ -292,6 +343,14 @@
 }
 
 /* =========================
+   Angular Material paginator (dentro do card)
+   ========================= */
+mat-paginator {
+  border-top: 1px solid rgba(17,24,39,0.06);
+  background: var(--card-2);
+}
+
+/* =========================
    Responsive
    ========================= */
 @media (max-width: 880px) {
@@ -309,7 +368,7 @@
     min-width: auto;
   }
 
-  /* No mobile, sempre mostra ações (hover não existe direito) */
+  /* no touch não existe hover de verdade */
   .row__actions {
     opacity: 1;
     transform: none;
@@ -325,5 +384,56 @@
   .sum {
     width: 100%;
     text-align: left;
+    white-space: normal;
+  }
+
+  /* ✅ layout “empilha” e melhora leitura */
+  .ui-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .ui-row__right {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .ui-value {
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .row__actions {
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+}
+
+/* ✅ telas bem pequenas */
+@media (max-width: 380px) {
+  .ui-row {
+    padding: 12px 14px;
+  }
+
+  .ui-list__group {
+    padding: 10px 14px;
+  }
+
+  .ui-row__ico {
+    width: 40px;
+    height: 40px;
+    border-radius: 13px;
+  }
+
+  .ui-value {
+    font-size: 16px;
+  }
+
+  .ui-btn--tiny {
+    padding: 0 10px;
   }
 }

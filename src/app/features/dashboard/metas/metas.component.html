@@ -2,7 +2,7 @@
   <div class="page-head">
     <div>
       <h2>Metas</h2>
-      <p>Crie metas mensais ou anuais (month 0 = anual).</p>
+      <p>Crie metas mensais ou anuais.</p>
     </div>
   </div>
 
@@ -23,7 +23,6 @@
       <div class="kpi__txt">
         <div class="kpi__label">Metas anuais</div>
         <div class="kpi__value">{{ metasAnuais }}</div>
-        <div class="kpi__sub">month = 0</div>
       </div>
       <div class="kpi__chev">›</div>
     </div>
@@ -33,7 +32,6 @@
       <div class="kpi__txt">
         <div class="kpi__label">Metas mensais</div>
         <div class="kpi__value">{{ metasMensais }}</div>
-        <div class="kpi__sub">1..12</div>
       </div>
       <div class="kpi__chev">›</div>
     </div>
@@ -45,29 +43,63 @@
     <div class="panel panel--list">
       <div class="panel__head">
         <h2>Minhas Metas</h2>
-        <button class="panel__action" type="button">Ordenar ▾</button>
+
+        <div class="sort">
+          <label class="sort__label">Ordenar</label>
+          <select class="sort__select" [(ngModel)]="sortFilter">
+            <option value="todas">Todas</option>
+            <option value="mensal">Mensais</option>
+            <option value="anual">Anuais</option>
+          </select>
+        </div>
       </div>
 
-      <div class="list" *ngIf="goals.length; else empty">
-        <div class="row" *ngFor="let g of goals">
+      <div class="list" *ngIf="goalsView.length; else empty">
+        <div class="row" *ngFor="let g of goalsView; trackBy: trackByGoalId">
           <div class="row__left">
             <div class="avatar">🎯</div>
 
             <div class="info">
               <div class="title">
                 <span class="name">{{ getGoalTitle(g) }}</span>
-                <span class="badge">{{ g.month === 0 ? 'Anual' : 'Mensal' }}</span>
+                <span class="badge"
+                  >{{ g.month === 0 ? 'Anual' : 'Mensal' }}</span
+                >
               </div>
 
               <div class="chips">
                 <span class="chip chip--neutral">Ano: {{ g.year }}</span>
-                <span class="chip chip--soft">Mês: {{ g.month }}</span>
+                <span class="chip chip--soft">
+                  {{ g.month === 0 ? 'Mês: 0 (anual)' : ('Mês: ' + g.month) }}
+                </span>
               </div>
 
               <div class="progress">
+                <div class="progress__bar" aria-hidden="true">
+                  <div
+                    class="progress__fill"
+                    [style.width.%]="getProgressPct(g)"
+                  ></div>
+                </div>
+
                 <div class="progress__meta">
-                  <span>Goal: <strong>{{ g.goal }}</strong></span>
-                  <span class="muted">{{ g.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+                  <span>
+                    Alvo:
+                    <strong>{{ formatBRL(g.goal) }}</strong>
+                    • Guardado:
+                    <strong
+                      [class.pos]="getSaved(g) > 0"
+                      [class.neg]="getSaved(g) < 0"
+                    >
+                      {{ formatBRL(getSaved(g)) }}
+                    </strong>
+                    • Falta:
+                    <strong>{{ formatBRL(getRemaining(g)) }}</strong>
+                  </span>
+
+                  <span class="muted"
+                    >{{ g.updatedAt | date:'dd/MM/yyyy HH:mm' }}</span
+                  >
                 </div>
               </div>
             </div>
@@ -76,16 +108,40 @@
           <div class="row__right">
             <div class="amount">
               <div class="amount__main">
-                Valor: <strong>{{ g.goal }}</strong>
+                Valor (meta):
+                <strong>{{ formatBRL(g.goal) }}</strong>
               </div>
+
+              <div class="amount__sub">
+                Impacto no saldo:
+                <strong
+                  [class.pos]="getSaved(g) > 0"
+                  [class.neg]="getSaved(g) < 0"
+                >
+                  {{ formatBRL(getSaved(g)) }}
+                </strong>
+              </div>
+
               <div class="amount__sub">
                 Atualizado em {{ g.updatedAt | date:'dd/MM/yyyy' }}
               </div>
             </div>
 
             <div class="row__btns">
-              <button class="btn btn-ghost" type="button" (click)="editarMeta(g)">Editar</button>
-              <button class="btn btn-ghost" type="button" (click)="excluirMeta(g)">Excluir</button>
+              <button
+                class="btn btn-ghost"
+                type="button"
+                (click)="editarMeta(g)"
+              >
+                Editar
+              </button>
+              <button
+                class="btn btn-ghost"
+                type="button"
+                (click)="excluirMeta(g)"
+              >
+                Excluir
+              </button>
             </div>
           </div>
         </div>
@@ -95,14 +151,20 @@
         <div class="empty">
           <h3>Nenhuma meta encontrada</h3>
           <p>Crie uma meta mensal ou anual.</p>
-          <button class="btn btn-primary" type="button" (click)="abrirCriarMeta()">+ Nova meta</button>
+          <button
+            class="btn btn-primary"
+            type="button"
+            (click)="abrirCriarMeta()"
+          >
+            + Nova meta
+          </button>
         </div>
       </ng-template>
     </div>
 
     <!-- Right: insights -->
     <aside class="panel panel--side">
-      <div class="insight">
+    <!-- <div class="insight">
         <div class="insight__head">
           <h3>Insight</h3>
           <span class="chev">›</span>
@@ -113,46 +175,121 @@
           <div class="text">
             <div class="strong">Organize por período</div>
             <div class="muted">
-              Para metas anuais, use month = 0. Para mensais, use 1..12 (sem 01, 02).
+              Para metas anuais, use month = 0. Para mensais, use 1..12 (sem 01,
+              02).
             </div>
           </div>
         </div>
 
-        <button class="btn btn-soft" type="button" (click)="abrirCriarMeta()">Criar meta</button>
-      </div>
+        <button class="btn btn-soft" type="button" (click)="abrirCriarMeta()">
+          Criar meta
+        </button>
+      </div> -->
 
       <div class="insight">
         <div class="insight__head">
-          <h3>Dica</h3>
+          <h3>Guardar na meta</h3>
         </div>
 
         <div class="insight__body">
-          <div class="miniicon">🎯</div>
-          <div class="text">
-            <div class="strong">Meta pode ser negativa</div>
-            <div class="muted">Não envie “+”. Para positivo, envie apenas 1.50.</div>
+          <div class="miniicon">🏦</div>
+          <div class="text meta-save">
+            <div class="strong">Lançar valor no saldo</div>
+            <div class="muted">
+              Guardar = sai do saldo. Tirar = volta para o saldo.
+            </div>
+
+            <div class="meta-save__form">
+              <div class="meta-save__field">
+                <label class="meta-save__label">Meta</label>
+                <select
+                  class="meta-save__control"
+                  [(ngModel)]="guardado.goalKey"
+                >
+                  <option value="" disabled>Selecione…</option>
+                  <option
+                    *ngFor="let g of goals; trackBy: trackByGoalId"
+                    [ngValue]="(g.year + '-' + g.month)"
+                  >
+                    {{ getGoalTitle(g) }}
+                  </option>
+                </select>
+              </div>
+
+              <div class="meta-save__row2">
+                <div class="meta-save__field">
+                  <label class="meta-save__label">Ação</label>
+                  <select
+                    class="meta-save__control"
+                    [(ngModel)]="guardado.tipo"
+                  >
+                    <option value="guardar">Guardar (saída)</option>
+                    <option value="tirar">Tirar (entrada)</option>
+                  </select>
+                </div>
+
+                <div class="meta-save__field">
+                  <label class="meta-save__label">Valor</label>
+                  <input
+                    class="meta-save__control"
+                    [(ngModel)]="guardado.valor"
+                    placeholder="Ex: 200 ou 200,50"
+                  />
+                </div>
+              </div>
+
+              <div class="meta-save__field">
+                <label class="meta-save__label">Descrição (opcional)</label>
+                <input
+                  class="meta-save__control"
+                  [(ngModel)]="guardado.desc"
+                  placeholder="Ex: Poupança / Reserva"
+                />
+              </div>
+
+              <button
+                class="btn btn-soft meta-save__btn"
+                type="button"
+                (click)="lancarGuardado()"
+                [disabled]="salvandoGuardado"
+              >
+                {{ salvandoGuardado ? 'Lançando...' : 'Lançar' }}
+              </button>
+
+              <div class="meta-save__msg" *ngIf="guardadoMsg">
+                {{ guardadoMsg }}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </aside>
   </div>
 
-  <!-- Floating action button -->
-  <button class="fab" type="button" (click)="abrirCriarMeta()" aria-label="Adicionar meta">+</button>
+  <button
+    class="fab"
+    type="button"
+    (click)="abrirCriarMeta()"
+    aria-label="Adicionar meta"
+  >
+    +
+  </button>
 </section>
 
 <!-- MODAL -->
-<div class="modal-backdrop" *ngIf="isCreateOpen" (click)="fecharCriarMeta()"></div>
+<div
+  class="modal-backdrop"
+  *ngIf="isCreateOpen"
+  (click)="fecharCriarMeta()"
+></div>
 
 <div class="modal" *ngIf="isCreateOpen" role="dialog" aria-modal="true">
   <div class="modal__header">
-    <!-- ✅ muda título conforme modo -->
     <h3>{{ isEditMode ? 'Editar meta' : 'Criar uma nova meta' }}</h3>
     <button class="iconbtn" type="button" (click)="fecharCriarMeta()">✕</button>
   </div>
 
   <div class="modal__body">
-    <!-- Título -->
     <div class="rowform">
       <label>Título</label>
       <input
@@ -161,10 +298,11 @@
         [class.is-invalid]="isInvalidTitle()"
         placeholder="Ex: Reserva, Viagem, Meta do ano..."
       />
-      <small class="hint">Obrigatório. (Por enquanto fica salvo no app, não no backend.)</small>
+      <small class="hint"
+        >Obrigatório. (Por enquanto fica salvo no app, não no backend.)</small
+      >
     </div>
 
-    <!-- Tipo -->
     <div class="rowform">
       <label>Tipo</label>
       <div class="segmented">
@@ -197,10 +335,18 @@
       <div class="rowform" *ngIf="form.tipo === 'mensal'">
         <label>Mês</label>
         <select [(ngModel)]="form.month">
-          <option [ngValue]="1">1</option><option [ngValue]="2">2</option><option [ngValue]="3">3</option>
-          <option [ngValue]="4">4</option><option [ngValue]="5">5</option><option [ngValue]="6">6</option>
-          <option [ngValue]="7">7</option><option [ngValue]="8">8</option><option [ngValue]="9">9</option>
-          <option [ngValue]="10">10</option><option [ngValue]="11">11</option><option [ngValue]="12">12</option>
+          <option [ngValue]="1">1</option
+          ><option [ngValue]="2">2</option
+          ><option [ngValue]="3">3</option>
+          <option [ngValue]="4">4</option
+          ><option [ngValue]="5">5</option
+          ><option [ngValue]="6">6</option>
+          <option [ngValue]="7">7</option
+          ><option [ngValue]="8">8</option
+          ><option [ngValue]="9">9</option>
+          <option [ngValue]="10">10</option
+          ><option [ngValue]="11">11</option
+          ><option [ngValue]="12">12</option>
         </select>
       </div>
 
@@ -226,13 +372,23 @@
   </div>
 
   <div class="modal__footer">
-    <button class="btn btn-ghost" type="button" (click)="fecharCriarMeta()" [disabled]="saving">
+    <button
+      class="btn btn-ghost"
+      type="button"
+      (click)="fecharCriarMeta()"
+      [disabled]="saving"
+    >
       Cancelar
     </button>
 
-    <!-- ✅ AQUI está a correção: chama submitMeta() -->
-    <button class="btn btn-primary" type="button" (click)="submitMeta()" [disabled]="saving">
-      {{ saving ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar meta') }}
+    <button
+      class="btn btn-primary"
+      type="button"
+      (click)="submitMeta()"
+      [disabled]="saving"
+    >
+      {{ saving ? 'Salvando...' : (isEditMode ? 'Salvar alterações' : 'Salvar
+      meta') }}
     </button>
   </div>
 </div>

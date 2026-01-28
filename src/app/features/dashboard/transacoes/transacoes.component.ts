@@ -5,10 +5,24 @@ import { Router } from "@angular/router";
 import { Subject, filter, takeUntil } from "rxjs";
 
 import { ServicesService } from "../../../core/service/services.service";
-import { FiltersService, FilterPatch, TipoTx, RangeValor } from "../../../core/service/filters.service";
-import { Transaction, TransactionPayload } from "../../../shared/models/interfaces/transaction";
+import {
+  FiltersService,
+  FilterPatch,
+  TipoTx,
+  RangeValor,
+} from "../../../core/service/filters.service";
+import {
+  Transaction,
+  TransactionPayload,
+} from "../../../shared/models/interfaces/transaction";
 
-import { TxModalComponent, TxModalValue } from "../../../shared/components/tx-modal/tx-modal.component";
+import {
+  TxModalComponent,
+  TxModalValue,
+} from "../../../shared/components/tx-modal/tx-modal.component";
+
+/** ✅ Angular Material paginator */
+import { MatPaginatorModule, PageEvent } from "@angular/material/paginator";
 
 type UiTx = Transaction & {
   groupLabel: string;
@@ -20,7 +34,7 @@ type UiTx = Transaction & {
 @Component({
   selector: "app-transacoes",
   standalone: true,
-  imports: [CommonModule, FormsModule, TxModalComponent],
+  imports: [CommonModule, FormsModule, TxModalComponent, MatPaginatorModule],
   templateUrl: "./transacoes.component.html",
   styleUrls: ["./transacoes.component.scss"],
 })
@@ -29,7 +43,13 @@ export class TransacoesComponent implements OnInit, OnDestroy {
 
   @ViewChild(TxModalComponent) txModal!: TxModalComponent;
 
+  /** ✅ dataset completo (já mapeado/ordenado) */
   txsAll: UiTx[] = [];
+
+  /** ✅ dataset filtrado (antes da paginação) */
+  txsFiltradas: UiTx[] = [];
+
+  /** ✅ dataset da página atual (é o que o HTML renderiza) */
   txs: UiTx[] = [];
 
   totalLabel = "Total transações: 0";
@@ -43,6 +63,16 @@ export class TransacoesComponent implements OnInit, OnDestroy {
   filtroCategorias: string[] = [];
   filtroTipos: TipoTx[] = [];
   filtroValores: RangeValor[] = [];
+
+  // ✅ paginação
+  pageIndex = 0;
+  pageSize = 10;
+  pageSizeOptions = [10, 25, 50, 100];
+
+  /** usado no HTML do paginator */
+  get totalFiltrado(): number {
+    return this.txsFiltradas.length;
+  }
 
   constructor(
     private services: ServicesService,
@@ -74,15 +104,41 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       const lista = Array.isArray(resposta) ? resposta : resposta?.data ?? [];
 
       this.txsAll = this.mapToUiTx(lista);
+
+      // sempre volta pra primeira página quando recarrega
+      this.pageIndex = 0;
+
       this.aplicarFiltros();
     } catch (e) {
       console.error("Erro ao buscar transações", e);
       this.txsAll = [];
+      this.txsFiltradas = [];
       this.txs = [];
-      this.atualizarTotais(this.txs);
+      this.atualizarTotais([]);
     } finally {
       this.carregando = false;
     }
+  }
+
+  // =========================
+  // PAGINAÇÃO
+  // =========================
+  onPage(e: PageEvent): void {
+    this.pageIndex = e.pageIndex;
+    this.pageSize = e.pageSize;
+    this.aplicarPaginacao();
+  }
+
+  private aplicarPaginacao(): void {
+    const start = this.pageIndex * this.pageSize;
+    const end = start + this.pageSize;
+    this.txs = this.txsFiltradas.slice(start, end);
+  }
+
+  /** ✅ usado no HTML para não “quebrar” o group header na paginação */
+  getPrevGroupLabel(i: number): string {
+    if (i <= 0) return "";
+    return this.txs[i - 1]?.groupLabel ?? "";
   }
 
   // =========================
@@ -111,10 +167,15 @@ export class TransacoesComponent implements OnInit, OnDestroy {
         return;
     }
 
+    // filtro mudou -> volta pra primeira página
+    this.pageIndex = 0;
     this.aplicarFiltros();
   }
 
-  private patchCategoria(value: string, mode: "toggle" | "set" | "clear"): void {
+  private patchCategoria(
+    value: string,
+    mode: "toggle" | "set" | "clear"
+  ): void {
     const cat = value.trim();
     if (!cat) return;
 
@@ -127,7 +188,9 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const idx = this.filtroCategorias.findIndex((c) => c.toLowerCase() === cat.toLowerCase());
+    const idx = this.filtroCategorias.findIndex(
+      (c) => c.toLowerCase() === cat.toLowerCase()
+    );
     if (idx >= 0) this.filtroCategorias.splice(idx, 1);
     else this.filtroCategorias.push(cat);
   }
@@ -147,7 +210,10 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     else this.filtroTipos.push(value);
   }
 
-  private patchValor(value: RangeValor, mode: "toggle" | "set" | "clear"): void {
+  private patchValor(
+    value: RangeValor,
+    mode: "toggle" | "set" | "clear"
+  ): void {
     const min = value.min;
     const max = value.max;
 
@@ -160,7 +226,9 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const idx = this.filtroValores.findIndex((r) => r.min === min && r.max === max);
+    const idx = this.filtroValores.findIndex(
+      (r) => r.min === min && r.max === max
+    );
     if (idx >= 0) this.filtroValores.splice(idx, 1);
     else this.filtroValores.push({ min, max });
   }
@@ -170,13 +238,30 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     this.filtroCategorias = [];
     this.filtroTipos = [];
     this.filtroValores = [];
+    this.pageIndex = 0;
     this.aplicarFiltros();
   }
 
   private definirFiltroMesAtual(): void {
     const agora = new Date();
-    const start = new Date(agora.getFullYear(), agora.getMonth(), 1, 0, 0, 0, 0);
-    const end = new Date(agora.getFullYear(), agora.getMonth() + 1, 0, 23, 59, 59, 999);
+    const start = new Date(
+      agora.getFullYear(),
+      agora.getMonth(),
+      1,
+      0,
+      0,
+      0,
+      0
+    );
+    const end = new Date(
+      agora.getFullYear(),
+      agora.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+      999
+    );
     this.filtroMes = { start, end };
   }
 
@@ -225,8 +310,11 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.txs = lista;
+    this.txsFiltradas = lista;
     this.atualizarTotais(lista);
+
+    // ✅ aplica paginação pra renderizar só a página atual
+    this.aplicarPaginacao();
   }
 
   private atualizarTotais(lista: UiTx[]): void {
@@ -245,9 +333,8 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       id: tx.id,
       desc: tx.desc,
       category: tx.category ?? "",
-      // tx.value é "+R$ 1.000" ou "-R$ 50" no seu UI. O modal quer "230,50" etc.
-      // então convertemos para "1000" simples:
-      value: String(Math.abs(tx.numeric ?? 0)),
+      // ✅ respeita vírgula (pt-BR) no campo do modal
+      value: this.formatarNumeroParaInput(Math.abs(tx.numeric ?? 0)),
       type: (tx.numeric ?? 0) >= 0 ? "entrada" : "saida",
     });
   }
@@ -265,9 +352,10 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const signed = v.type === "saida" ? -Math.abs(valorNum) : Math.abs(valorNum);
+    const signed =
+      v.type === "saida" ? -Math.abs(valorNum) : Math.abs(valorNum);
 
-    // payload do backend (ajusta se seu backend exigir outro shape)
+    // payload do backend
     const agora = new Date().toISOString();
     const payload: TransactionPayload = {
       description: desc,
@@ -280,13 +368,9 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     try {
       // ✅ EDITAR
       if (v.id) {
-        // >>> AJUSTE AQUI conforme o nome real do seu método/endpoint
-        // await this.services.updateExpense(v.id, payload);
-        // ou:
-        await (this.services as any).editExpense?.(v.id, payload) ??
-          await (this.services as any).updateExpense?.(v.id, payload);
+        await ((this.services as any).editExpense?.(v.id, payload) ??
+          (this.services as any).updateExpense?.(v.id, payload));
 
-        // atualiza UI local (sem recarregar tudo)
         const idx = this.txsAll.findIndex((x) => x.id === v.id);
         if (idx >= 0) {
           const old = this.txsAll[idx];
@@ -304,9 +388,11 @@ export class TransacoesComponent implements OnInit, OnDestroy {
           const copy = [...this.txsAll];
           copy[idx] = ui;
           this.txsAll = copy;
+
+          // mantém na página 0 após salvar (pra evitar “sumir”)
+          this.pageIndex = 0;
           this.aplicarFiltros();
         } else {
-          // fallback: recarrega
           await this.carregarTodas();
         }
 
@@ -336,10 +422,11 @@ export class TransacoesComponent implements OnInit, OnDestroy {
 
       const ui = this.toUiTx(createdTx, agora);
       this.txsAll = [ui, ...this.txsAll];
+
+      this.pageIndex = 0;
       this.aplicarFiltros();
     } catch (e) {
       console.error("Erro ao salvar transação (API)", e);
-      // fallback seguro: recarrega lista
       await this.carregarTodas();
     } finally {
       this.salvando = false;
@@ -355,6 +442,15 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     const backupAll = [...this.txsAll];
 
     this.txsAll = this.txsAll.filter((x) => x.id !== tx.id);
+
+    // se a página atual ficou vazia, volta uma página (se der)
+    if (
+      this.pageIndex > 0 &&
+      this.pageIndex * this.pageSize >= this.txsAll.length
+    ) {
+      this.pageIndex = Math.max(0, this.pageIndex - 1);
+    }
+
     this.aplicarFiltros();
 
     try {
@@ -374,24 +470,12 @@ export class TransacoesComponent implements OnInit, OnDestroy {
   // MAPEAMENTO UI
   // =========================
   private mapToUiTx(lista: any[]): UiTx[] {
-    const agora = new Date();
-    const hojeKey = this.dateKey(agora);
-    const ontem = new Date(agora);
-    ontem.setDate(agora.getDate() - 1);
-    const ontemKey = this.dateKey(ontem);
-
     const normalizadas = (lista as any[]).map((item) => {
       const valor: number = item.value ?? 0;
       const descricao: string = item.description ?? item.desc ?? "Transação";
       const id: string | undefined = item.id ?? item._id ?? item.transactionId;
 
       const iso = item.date ? String(item.date) : new Date().toISOString();
-      const dt = new Date(iso);
-      const key = this.dateKey(dt);
-
-      const groupLabel =
-        key === hojeKey ? "Hoje" : key === ontemKey ? "Ontem" : this.formatarDataCurta(dt);
-
       const category = (item.category ?? "").trim();
 
       return this.toUiTx(
@@ -406,7 +490,12 @@ export class TransacoesComponent implements OnInit, OnDestroy {
       );
     });
 
-    normalizadas.sort((a, b) => new Date(b.dateISO ?? 0).getTime() - new Date(a.dateISO ?? 0).getTime());
+    // mais recentes primeiro
+    normalizadas.sort(
+      (a, b) =>
+        new Date(b.dateISO ?? 0).getTime() - new Date(a.dateISO ?? 0).getTime()
+    );
+
     return normalizadas;
   }
 
@@ -469,18 +558,46 @@ export class TransacoesComponent implements OnInit, OnDestroy {
     return `${dia} ${mes.charAt(0).toUpperCase() + mes.slice(1)}`;
   }
 
+  // =========================
+  // MOEDA (pt-BR) — ✅ números com vírgula
+  // =========================
   private formatarMoedaComSinal(valor: number): string {
-    const arredondado = Math.round(valor);
-    const sinal = arredondado < 0 ? "-" : "+";
-    return sinal + "R$ " + new Intl.NumberFormat("pt-BR").format(Math.abs(arredondado));
+    const safe = Number.isFinite(valor) ? valor : 0;
+    const sinal = safe < 0 ? "-" : "+";
+
+    return (
+      sinal +
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(Math.abs(safe))
+    );
+  }
+
+  private formatarNumeroParaInput(valor: number): string {
+    // input do modal: "1234,56"
+    return new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(valor);
   }
 
   private parseValorMoeda(v: string): number {
     if (!v) return 0;
-    let s = v.replace(/R\$|\s/g, "");
-    s = s.replace(/\./g, "");
-    s = s.replace(/,/g, ".");
+
+    // aceita "1.234,56" e também "1234.56" se colarem errado
+    let s = String(v).trim();
+    s = s.replace(/R\$|\s/g, "");
     s = s.replace(/[+-]/g, "");
+
+    // se tiver vírgula, é pt-BR
+    if (s.includes(",")) {
+      s = s.replace(/\./g, "");
+      s = s.replace(/,/g, ".");
+    }
+
     const n = Number(s);
     return Number.isFinite(n) ? n : 0;
   }
